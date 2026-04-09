@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import zipfile
 from datetime import datetime, UTC
 
 import geopandas as gpd
@@ -35,12 +36,13 @@ class TreeCoverDroneGlobalDefinition(DatasetDefinition):
 			package_name = f'{package_name}_test'
 
 		work_dir = config.working_dir / package_name
-		output_dir = config.output_root / self.name / version
+		output_dir = config.output_root
+		zip_path = output_dir / f'{package_name}.zip'
 
-		if output_dir.exists():
+		if zip_path.exists():
 			if not config.overwrite_existing:
-				raise FileExistsError(f'Output already exists: {output_dir}')
-			shutil.rmtree(output_dir)
+				raise FileExistsError(f'Output already exists: {zip_path}')
+			zip_path.unlink()
 
 		if work_dir.exists():
 			shutil.rmtree(work_dir)
@@ -108,8 +110,14 @@ class TreeCoverDroneGlobalDefinition(DatasetDefinition):
 		manifest_path = work_dir / 'manifest.json'
 		manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
 
-		output_dir.parent.mkdir(parents=True, exist_ok=True)
-		shutil.move(str(work_dir), str(output_dir))
+		output_dir.mkdir(parents=True, exist_ok=True)
+		with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+			for path in sorted(work_dir.iterdir()):
+				if not path.is_file():
+					continue
+				archive.write(path, arcname=path.name)
+
+		shutil.rmtree(work_dir)
 
 		return BuildResult(
 			dataset_name=self.name,
@@ -117,10 +125,7 @@ class TreeCoverDroneGlobalDefinition(DatasetDefinition):
 			version=version,
 			output_dir=output_dir,
 			artifact_paths={
-				'gpkg': output_dir / gpkg_path.name,
-				'metadata_csv': output_dir / metadata_csv.name,
-				'metadata_parquet': output_dir / metadata_parquet.name,
-				'manifest': output_dir / manifest_path.name,
+				'zip': zip_path,
 			},
 			used_dataset_ids=used_dataset_ids,
 			dataset_metadata_rows=metadata_rows,
