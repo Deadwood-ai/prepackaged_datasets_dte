@@ -4,7 +4,6 @@ from __future__ import annotations
 def build_dataset_metadata_row(dataset_row: dict) -> dict:
 	return {
 		'dataset_id': dataset_row['id'],
-		'file_name': dataset_row.get('file_name'),
 		'authors': ', '.join(dataset_row.get('authors') or []),
 		'acquisition_year': dataset_row.get('aquisition_year'),
 		'acquisition_month': dataset_row.get('aquisition_month'),

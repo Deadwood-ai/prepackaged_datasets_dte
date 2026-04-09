@@ -28,9 +28,7 @@ class LabelRepository:
 			cur.execute(
 				"""
 				select
-					id,
 					dataset_id,
-					label_id,
 					area_m2,
 					properties,
 					ST_AsBinary(geometry) as geometry_wkb
@@ -49,8 +47,6 @@ class LabelRepository:
 				"""
 				select
 					dataset_id,
-					image_quality,
-					notes,
 					ST_AsBinary(ST_GeomFromGeoJSON(geometry::text)) as geometry_wkb
 				from v2_aois
 				where dataset_id = %s

@@ -11,5 +11,5 @@ def write_tree_cover_package(gpkg_path: Path, tree_cover: gpd.GeoDataFrame, aoi:
 	if aoi.empty:
 		raise ValueError('No AOI features to write.')
 
-	tree_cover.to_file(gpkg_path, layer='tree_cover', driver='GPKG')
-	aoi.to_file(gpkg_path, layer='aoi', driver='GPKG')
+	tree_cover.to_file(gpkg_path, layer='tree_cover', driver='GPKG', index=False)
+	aoi.to_file(gpkg_path, layer='aoi', driver='GPKG', index=False)
