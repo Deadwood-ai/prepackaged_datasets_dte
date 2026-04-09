@@ -51,7 +51,7 @@ class LabelRepository:
 					dataset_id,
 					image_quality,
 					notes,
-					ST_AsBinary(geometry) as geometry_wkb
+					ST_AsBinary(ST_GeomFromGeoJSON(geometry::text)) as geometry_wkb
 				from v2_aois
 				where dataset_id = %s
 				limit 1
