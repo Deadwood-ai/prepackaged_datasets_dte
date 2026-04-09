@@ -29,8 +29,6 @@ class LabelRepository:
 				"""
 				select
 					dataset_id,
-					area_m2,
-					properties,
 					ST_AsBinary(geometry) as geometry_wkb
 				from v_export_polygon_candidates
 				where dataset_id = %s
