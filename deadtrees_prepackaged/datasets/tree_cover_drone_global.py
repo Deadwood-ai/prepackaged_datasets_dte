@@ -32,6 +32,8 @@ class TreeCoverDroneGlobalDefinition(DatasetDefinition):
 	def build(self, config: BuildConfig) -> BuildResult:
 		version = config.version or datetime.now(UTC).strftime('%Y.%m.%d')
 		package_name = f'{self.name}_{version}'
+		if config.test_mode:
+			package_name = f'{package_name}_test'
 
 		work_dir = config.working_dir / package_name
 		output_dir = config.output_root / self.name / version
@@ -48,6 +50,8 @@ class TreeCoverDroneGlobalDefinition(DatasetDefinition):
 		client = create_supabase_client(config.supabase_url, config.supabase_key)
 		labels = LabelRepository(client)
 		dataset_rows = fetch_eligible_tree_cover_datasets(client)
+		if config.test_mode:
+			dataset_rows = dataset_rows[:10]
 
 		tree_cover_frames: list[gpd.GeoDataFrame] = []
 		aoi_frames: list[gpd.GeoDataFrame] = []
@@ -102,6 +106,7 @@ class TreeCoverDroneGlobalDefinition(DatasetDefinition):
 			tree_cover_feature_count=int(len(tree_cover_gdf)),
 			dataset_count=int(len(used_dataset_ids)),
 			artifact_names=[gpkg_path.name, metadata_csv.name, metadata_parquet.name, 'manifest.json'],
+			test_mode=config.test_mode,
 		)
 		manifest_path = work_dir / 'manifest.json'
 		manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')

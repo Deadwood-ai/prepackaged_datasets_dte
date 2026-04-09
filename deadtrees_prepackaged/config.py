@@ -12,6 +12,7 @@ class BuildConfig:
 	output_root: Path | str
 	working_dir: Path | str
 	version: str | None = None
+	test_mode: bool = False
 	overwrite_existing: bool = False
 	keep_workdir: bool = False
 

@@ -11,11 +11,13 @@ def build_manifest(
 	tree_cover_feature_count: int,
 	dataset_count: int,
 	artifact_names: list[str],
+	test_mode: bool,
 ) -> dict:
 	return {
 		'dataset_name': dataset_name,
 		'package_name': package_name,
 		'version': version,
+		'test_mode': test_mode,
 		'built_at': datetime.now(UTC).isoformat(),
 		'used_dataset_ids': used_dataset_ids,
 		'dataset_count': dataset_count,

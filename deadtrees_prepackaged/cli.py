@@ -23,6 +23,7 @@ def _build_parser() -> argparse.ArgumentParser:
 	build_parser.add_argument('--output-root', required=True)
 	build_parser.add_argument('--working-dir', required=True)
 	build_parser.add_argument('--version')
+	build_parser.add_argument('--test-mode', action='store_true')
 	build_parser.add_argument('--overwrite-existing', action='store_true')
 	build_parser.add_argument('--keep-workdir', action='store_true')
 	build_parser.set_defaults(func=_cmd_build)
@@ -43,6 +44,7 @@ def _cmd_build(args: argparse.Namespace) -> None:
 		output_root=Path(args.output_root),
 		working_dir=Path(args.working_dir),
 		version=args.version,
+		test_mode=args.test_mode,
 		overwrite_existing=args.overwrite_existing,
 		keep_workdir=args.keep_workdir,
 	)
