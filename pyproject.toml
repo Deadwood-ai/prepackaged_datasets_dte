@@ -17,8 +17,16 @@ dependencies = [
   "shapely>=2.0.0",
 ]
 
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0.0",
+]
+
 [project.scripts]
 deadtrees-prepackaged = "deadtrees_prepackaged.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["deadtrees_prepackaged"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
