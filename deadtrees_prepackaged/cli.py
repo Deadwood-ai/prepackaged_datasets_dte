@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from .config import BuildConfig
@@ -17,8 +18,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
 	build_parser = subparsers.add_parser('build', help='Build a dataset definition')
 	build_parser.add_argument('name', choices=list_datasets())
-	build_parser.add_argument('--supabase-url', required=True)
-	build_parser.add_argument('--supabase-key', required=True)
+	build_parser.add_argument('--pg-dsn', default=os.getenv('DEADTREES_PG_DSN'))
+	build_parser.add_argument('--pg-host', default=os.getenv('DEADTREES_DB_HOST'))
+	build_parser.add_argument('--pg-port', type=int, default=int(os.getenv('DEADTREES_DB_PORT', '5432')))
+	build_parser.add_argument('--pg-database', default=os.getenv('DEADTREES_DB_NAME'))
+	build_parser.add_argument('--pg-user', default=os.getenv('DEADTREES_DB_USER'))
+	build_parser.add_argument('--pg-password', default=os.getenv('DEADTREES_DB_PASSWORD'))
+	build_parser.add_argument('--pg-sslmode', default=os.getenv('DEADTREES_DB_SSLMODE', 'require'))
 	build_parser.add_argument('--storage-root', required=True)
 	build_parser.add_argument('--output-root', required=True)
 	build_parser.add_argument('--working-dir', required=True)
@@ -38,8 +44,13 @@ def _cmd_list(_args: argparse.Namespace) -> None:
 
 def _cmd_build(args: argparse.Namespace) -> None:
 	config = BuildConfig(
-		supabase_url=args.supabase_url,
-		supabase_key=args.supabase_key,
+		pg_dsn=args.pg_dsn,
+		pg_host=args.pg_host,
+		pg_port=args.pg_port,
+		pg_database=args.pg_database,
+		pg_user=args.pg_user,
+		pg_password=args.pg_password,
+		pg_sslmode=args.pg_sslmode,
 		storage_root=Path(args.storage_root),
 		output_root=Path(args.output_root),
 		working_dir=Path(args.working_dir),

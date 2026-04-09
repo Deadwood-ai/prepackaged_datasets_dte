@@ -4,10 +4,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
+from psycopg import Connection
+from psycopg.rows import dict_row
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.windows import Window
-from supabase import Client
 
 
 @dataclass(slots=True)
@@ -20,19 +21,22 @@ class Tile:
 
 
 class OrthophotoTileProvider:
-	def __init__(self, client: Client, storage_root: Path | str):
-		self.client = client
+	def __init__(self, connection: Connection, storage_root: Path | str):
+		self.connection = connection
 		self.storage_root = Path(storage_root)
 
 	def get_ortho_path(self, dataset_id: int) -> Path:
-		response = (
-			self.client.table('v2_orthos')
-			.select('ortho_file_name')
-			.eq('dataset_id', dataset_id)
-			.limit(1)
-			.execute()
-		)
-		rows = response.data or []
+		with self.connection.cursor(row_factory=dict_row) as cur:
+			cur.execute(
+				"""
+				select ortho_file_name
+				from v2_orthos
+				where dataset_id = %s
+				limit 1
+				""",
+				(dataset_id,),
+			)
+			rows = cur.fetchall()
 		if not rows:
 			raise ValueError(f'No orthophoto found for dataset {dataset_id}')
 
