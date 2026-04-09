@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "deadtrees-prepackaged"
+version = "0.1.0"
+description = "Minimal builders for prepackaged deadtrees datasets."
+readme = "Prepackaged deadtrees.earth .md"
+requires-python = ">=3.11"
+dependencies = [
+  "geopandas>=1.0.0",
+  "pandas>=2.2.0",
+  "pyarrow>=16.0.0",
+  "rasterio>=1.4.0",
+  "shapely>=2.0.0",
+  "supabase>=2.5.0",
+]
+
+[project.scripts]
+deadtrees-prepackaged = "deadtrees_prepackaged.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["deadtrees_prepackaged"]

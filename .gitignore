@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Generated package outputs
+tmp/
+output/
+prepackaged/
