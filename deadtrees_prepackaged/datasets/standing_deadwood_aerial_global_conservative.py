@@ -92,6 +92,7 @@ def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> li
 		connection=connection,
 		sql=STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL,
 		limit=limit,
+		query_name='standing deadwood eligible dataset query',
 	)
 
 
@@ -145,19 +146,34 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 
 			for dataset_row in dataset_rows:
 				dataset_id = int(dataset_row['id'])
+				logger.info("Processing dataset_id=%s for dataset=%s", dataset_id, self.name)
 				deadwood = labels.get_deadwood_geometries(dataset_id)
+				logger.info(
+					"Loaded %s deadwood geometries for dataset_id=%s",
+					len(deadwood),
+					dataset_id,
+				)
 				if deadwood.empty:
+					logger.info("Skipping dataset_id=%s because no deadwood geometries were found", dataset_id)
 					continue
 
 				aoi = labels.get_aoi(dataset_id)
+				logger.info("Loaded %s AOI geometries for dataset_id=%s", len(aoi), dataset_id)
 				deadwood = clip_geometries_to_aoi(deadwood, aoi)
+				logger.info(
+					"After AOI clipping dataset_id=%s has %s deadwood geometries",
+					dataset_id,
+					len(deadwood),
+				)
 				if deadwood.empty:
+					logger.info("Skipping dataset_id=%s because all geometries were removed after clipping", dataset_id)
 					continue
 
 				deadwood_frames.append(deadwood)
 				aoi_frames.append(aoi)
 				used_dataset_ids.append(dataset_id)
 				metadata_rows.append(build_dataset_metadata_row(dataset_row))
+				logger.info("Accepted dataset_id=%s for dataset=%s", dataset_id, self.name)
 
 		if not deadwood_frames or not aoi_frames:
 			raise ValueError('No eligible deadwood export data found.')
