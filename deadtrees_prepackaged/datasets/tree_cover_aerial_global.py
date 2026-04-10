@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import shutil
 import zipfile
 from datetime import datetime, UTC
@@ -19,6 +20,9 @@ from ..postgres.client import connect_postgres
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
+
+
+logger = logging.getLogger(__name__)
 
 
 TREE_COVER_ELIGIBLE_DATASETS_SQL = """
@@ -111,10 +115,18 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 		if work_dir.exists():
 			shutil.rmtree(work_dir)
 		work_dir.mkdir(parents=True, exist_ok=True)
+		logger.info(
+			"Starting dataset build: dataset=%s package=%s test_mode=%s",
+			self.name,
+			package_name,
+			config.test_mode,
+		)
 
 		with connect_postgres(config) as conn:
+			logger.info("Connected to PostgreSQL for dataset=%s", self.name)
 			labels = LabelRepository(conn)
 			dataset_rows = fetch_eligible_tree_cover_datasets(conn, limit=10 if config.test_mode else None)
+			logger.info("Fetched %s eligible dataset rows for dataset=%s", len(dataset_rows), self.name)
 
 			tree_cover_frames: list[gpd.GeoDataFrame] = []
 			aoi_frames: list[gpd.GeoDataFrame] = []
@@ -139,6 +151,12 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 
 		if not tree_cover_frames or not aoi_frames:
 			raise ValueError('No eligible tree cover export data found.')
+		logger.info(
+			"Prepared %s datasets with %s metadata rows for dataset=%s",
+			len(used_dataset_ids),
+			len(metadata_rows),
+			self.name,
+		)
 
 		tree_cover_gdf = gpd.GeoDataFrame(
 			pd.concat(tree_cover_frames, ignore_index=True),
@@ -153,6 +171,12 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 
 		gpkg_path = work_dir / f'{package_name}.gpkg'
 		write_tree_cover_package(gpkg_path=gpkg_path, tree_cover=tree_cover_gdf, aoi=aoi_gdf)
+		logger.info(
+			"Wrote geopackage for dataset=%s path=%s features=%s",
+			self.name,
+			gpkg_path,
+			len(tree_cover_gdf),
+		)
 
 		metadata_csv = work_dir / 'METADATA.csv'
 		metadata_parquet = work_dir / 'METADATA.parquet'
@@ -161,6 +185,7 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 		metadata_df.to_csv(metadata_csv, index=False)
 		metadata_df.to_parquet(metadata_parquet, index=False)
 		license_path.write_text(build_license_text(dataset_rows), encoding='utf-8')
+		logger.info("Wrote metadata and license files for dataset=%s", self.name)
 
 		manifest = build_manifest(
 			dataset_name=self.name,
@@ -181,6 +206,7 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 		)
 		manifest_path = work_dir / 'manifest.json'
 		manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+		logger.info("Wrote manifest for dataset=%s", self.name)
 
 		output_dir.mkdir(parents=True, exist_ok=True)
 		with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
@@ -188,8 +214,10 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 				if not path.is_file():
 					continue
 				archive.write(path, arcname=path.name)
+		logger.info("Created output zip for dataset=%s path=%s", self.name, zip_path)
 
 		shutil.rmtree(work_dir)
+		logger.info("Cleaned work directory for dataset=%s path=%s", self.name, work_dir)
 
 		return BuildResult(
 			dataset_name=self.name,

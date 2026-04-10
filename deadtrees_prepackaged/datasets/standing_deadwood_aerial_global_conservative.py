@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import shutil
 import zipfile
 from datetime import UTC, datetime
@@ -19,6 +20,9 @@ from ..postgres.client import connect_postgres
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
+
+
+logger = logging.getLogger(__name__)
 
 
 STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
@@ -84,7 +88,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 
 
 def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> list[dict]:
-		return fetch_dataset_rows(
+	return fetch_dataset_rows(
 		connection=connection,
 		sql=STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL,
 		limit=limit,
@@ -121,10 +125,18 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 		if work_dir.exists():
 			shutil.rmtree(work_dir)
 		work_dir.mkdir(parents=True, exist_ok=True)
+		logger.info(
+			"Starting dataset build: dataset=%s package=%s test_mode=%s",
+			self.name,
+			package_name,
+			config.test_mode,
+		)
 
 		with connect_postgres(config) as conn:
+			logger.info("Connected to PostgreSQL for dataset=%s", self.name)
 			labels = LabelRepository(conn)
 			dataset_rows = fetch_eligible_deadwood_datasets(conn, limit=10 if config.test_mode else None)
+			logger.info("Fetched %s eligible dataset rows for dataset=%s", len(dataset_rows), self.name)
 
 			deadwood_frames: list[gpd.GeoDataFrame] = []
 			aoi_frames: list[gpd.GeoDataFrame] = []
@@ -149,6 +161,12 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 
 		if not deadwood_frames or not aoi_frames:
 			raise ValueError('No eligible deadwood export data found.')
+		logger.info(
+			"Prepared %s datasets with %s metadata rows for dataset=%s",
+			len(used_dataset_ids),
+			len(metadata_rows),
+			self.name,
+		)
 
 		deadwood_gdf = gpd.GeoDataFrame(
 			pd.concat(deadwood_frames, ignore_index=True),
@@ -168,6 +186,12 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 			aoi=aoi_gdf,
 			polygon_layer='standing_deadwood',
 		)
+		logger.info(
+			"Wrote geopackage for dataset=%s path=%s features=%s",
+			self.name,
+			gpkg_path,
+			len(deadwood_gdf),
+		)
 
 		metadata_csv = work_dir / 'METADATA.csv'
 		metadata_parquet = work_dir / 'METADATA.parquet'
@@ -176,6 +200,7 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 		metadata_df.to_csv(metadata_csv, index=False)
 		metadata_df.to_parquet(metadata_parquet, index=False)
 		license_path.write_text(build_license_text(dataset_rows), encoding='utf-8')
+		logger.info("Wrote metadata and license files for dataset=%s", self.name)
 
 		manifest = build_manifest(
 			dataset_name=self.name,
@@ -196,6 +221,7 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 		)
 		manifest_path = work_dir / 'manifest.json'
 		manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+		logger.info("Wrote manifest for dataset=%s", self.name)
 
 		output_dir.mkdir(parents=True, exist_ok=True)
 		with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
@@ -203,8 +229,10 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 				if not path.is_file():
 					continue
 				archive.write(path, arcname=path.name)
+		logger.info("Created output zip for dataset=%s path=%s", self.name, zip_path)
 
 		shutil.rmtree(work_dir)
+		logger.info("Cleaned work directory for dataset=%s path=%s", self.name, work_dir)
 
 		return BuildResult(
 			dataset_name=self.name,

@@ -2,11 +2,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 from pathlib import Path
 
 from .config import BuildConfig
 from .runner import build_dataset, list_datasets
+
+
+def _configure_logging() -> None:
+	logging.basicConfig(
+		level=logging.INFO,
+		format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+	)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -77,6 +85,7 @@ def _cmd_build(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+	_configure_logging()
 	parser = _build_parser()
 	args = parser.parse_args()
 	args.func(args)
