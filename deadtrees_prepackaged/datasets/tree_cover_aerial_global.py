@@ -17,7 +17,7 @@ from ..helpers.license import TREE_COVER_REFERENCE, build_license_text
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..postgres.client import connect_postgres
-from ..postgres.filters import public_cc_by_dataset_filters
+from ..postgres.filters import public_cc_by_audited_candidate_filters
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
@@ -33,7 +33,6 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 		from v_export_polygon_candidates p
 		join v2_datasets d on d.id = p.dataset_id
 		where p.layer_type = 'forest_cover'
-			and p.final_assessment = 'no_issues'
 			and p.forest_cover_quality in ('great', 'sentinel_ok')
 			and {common_dataset_filters}
 	),
@@ -77,7 +76,8 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 	left join doi_info di on di.dataset_id = d.id
 	order by d.id
 """.format(
-	common_dataset_filters=public_cc_by_dataset_filters(
+	common_dataset_filters=public_cc_by_audited_candidate_filters(
+		candidate_alias='p',
 		dataset_alias='d',
 		require_acquisition_date=True,
 	),

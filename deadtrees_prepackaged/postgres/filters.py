@@ -22,3 +22,19 @@ def public_cc_by_dataset_filters(
 		)
 
 	return '\n\t\t\tand '.join(filters)
+
+
+def public_cc_by_audited_candidate_filters(
+	*,
+	candidate_alias: str = 'p',
+	dataset_alias: str = 'd',
+	require_acquisition_date: bool = True,
+) -> str:
+	filters = [
+		f"{candidate_alias}.final_assessment = 'no_issues'",
+		public_cc_by_dataset_filters(
+			dataset_alias=dataset_alias,
+			require_acquisition_date=require_acquisition_date,
+		),
+	]
+	return '\n\t\t\tand '.join(filters)
