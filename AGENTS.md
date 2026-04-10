@@ -117,7 +117,7 @@ DEADTREES_DB_SSLMODE=disable \
   - `METADATA.csv`
   - `METADATA.parquet`
   - `manifest.json`
-  - `LICENSE.txt` is always included for all packages and contains the `CC BY 4.0` license, all unique authors in alphabetical order, and all existing DOI values already present in the source metadata.
+  - `LICENSE.txt` is always included for all packages and contains package attribution text, all unique authors in alphabetical order as a comma-separated list, all existing DOI values plus `deadtrees.earth` as sources, package-specific reference citations, and the full `CC BY 4.0` license text.
   - `manifest.json` includes a `source_reference` object with the dataset-definition file path and installed package version.
 - Current `tree_cover` layer columns:
   - `dataset_id`

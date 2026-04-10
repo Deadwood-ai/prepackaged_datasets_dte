@@ -1,4 +1,8 @@
-from deadtrees_prepackaged.helpers.license import build_license_text
+from deadtrees_prepackaged.helpers.license import (
+	STANDING_DEADWOOD_MODEL_REFERENCE,
+	TREE_COVER_REFERENCE,
+	build_license_text,
+)
 
 
 def test_build_license_text_sorts_unique_authors_and_dois():
@@ -14,22 +18,13 @@ def test_build_license_text_sorts_unique_authors_and_dois():
 				'citation_doi': '10.1000/alpha',
 				'freidata_doi': '10.1000/beta; 10.1000/delta',
 			},
-		]
+		],
+		package_references=[TREE_COVER_REFERENCE, STANDING_DEADWOOD_MODEL_REFERENCE],
 	)
 
-	assert license_text == (
-		'License: CC BY 4.0\n'
-		'License URL: https://creativecommons.org/licenses/by/4.0/\n'
-		'\n'
-		'Authors:\n'
-		'Alice\n'
-		'Bob\n'
-		'Zed\n'
-		'\n'
-		'Existing DOIs:\n'
-		'10.1000/alpha\n'
-		'10.1000/beta\n'
-		'10.1000/delta\n'
-		'10.1000/gamma\n'
-		'10.1000/zeta\n'
-	)
+	assert 'This package includes derivatives from aerial datasets created by the following authors.' in license_text
+	assert 'Alice, Bob, Zed' in license_text
+	assert 'https://deadtrees.earth, 10.1000/alpha, 10.1000/beta, 10.1000/delta, 10.1000/gamma, 10.1000/zeta' in license_text
+	assert TREE_COVER_REFERENCE in license_text
+	assert STANDING_DEADWOOD_MODEL_REFERENCE in license_text
+	assert 'Creative Commons Attribution 4.0 International Public License' in license_text

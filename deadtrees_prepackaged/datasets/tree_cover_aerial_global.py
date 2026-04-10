@@ -13,7 +13,7 @@ from ..config import BuildConfig
 from ..helpers.geometry import clip_geometries_to_aoi
 from ..helpers.geopackage import write_tree_cover_package
 from ..helpers.labels import LabelRepository
-from ..helpers.license import build_license_text
+from ..helpers.license import TREE_COVER_REFERENCE, build_license_text
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..postgres.client import connect_postgres
@@ -200,7 +200,10 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 		metadata_df = pd.DataFrame(metadata_rows)
 		metadata_df.to_csv(metadata_csv, index=False)
 		metadata_df.to_parquet(metadata_parquet, index=False)
-		license_path.write_text(build_license_text(dataset_rows), encoding='utf-8')
+		license_path.write_text(
+			build_license_text(dataset_rows, package_references=[TREE_COVER_REFERENCE]),
+			encoding='utf-8',
+		)
 		logger.info("Wrote metadata and license files for dataset=%s", self.name)
 
 		manifest = build_manifest(

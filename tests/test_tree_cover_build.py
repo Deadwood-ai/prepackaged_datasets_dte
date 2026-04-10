@@ -111,19 +111,10 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 			'tree-cover-aerial-global_2026.04.09_test.gpkg',
 		]
 		license_text = archive.read('LICENSE.txt').decode('utf-8')
-		assert license_text == (
-			'License: CC BY 4.0\n'
-			'License URL: https://creativecommons.org/licenses/by/4.0/\n'
-			'\n'
-			'Authors:\n'
-			'Alice\n'
-			'Zed\n'
-			'\n'
-			'Existing DOIs:\n'
-			'10.1000/alpha\n'
-			'10.1000/beta\n'
-			'10.1000/zeta\n'
-		)
+		assert 'Alice, Zed' in license_text
+		assert 'https://deadtrees.earth, 10.1000/alpha, 10.1000/beta, 10.1000/zeta' in license_text
+		assert 'OAM-TCD: A globally diverse dataset of high-resolution tree cover maps.' in license_text
+		assert 'Creative Commons Attribution 4.0 International Public License' in license_text
 		manifest = json.loads(archive.read('manifest.json').decode('utf-8'))
 		assert manifest['test_mode'] is True
 		assert manifest['used_dataset_ids'] == [1]
@@ -226,19 +217,11 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 	with zipfile.ZipFile(zip_path) as archive:
 		archive.extractall(extract_dir)
 		license_text = archive.read('LICENSE.txt').decode('utf-8')
-		assert license_text == (
-			'License: CC BY 4.0\n'
-			'License URL: https://creativecommons.org/licenses/by/4.0/\n'
-			'\n'
-			'Authors:\n'
-			'Beta\n'
-			'Gamma\n'
-			'\n'
-			'Existing DOIs:\n'
-			'10.1000/alpha\n'
-			'10.1000/beta\n'
-			'10.1000/gamma\n'
-		)
+		assert 'Beta, Gamma' in license_text
+		assert 'https://deadtrees.earth, 10.1000/alpha, 10.1000/beta, 10.1000/gamma' in license_text
+		assert '10.1016/j.ophoto.2025.100104' in license_text
+		assert 'Global, multi-scale standing deadwood segmentation in centimeter-scale aerial images.' in license_text
+		assert 'Creative Commons Attribution 4.0 International Public License' in license_text
 
 	gpkg_path = extract_dir / 'standing-deadwood-aerial-global-conservative_2026.04.09_test.gpkg'
 	deadwood = gpd.read_file(gpkg_path, layer='standing_deadwood')
