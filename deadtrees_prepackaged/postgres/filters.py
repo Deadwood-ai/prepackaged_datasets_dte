@@ -9,7 +9,7 @@ def public_cc_by_dataset_filters(
 	filters = [
 		f"{dataset_alias}.license = 'CC BY'",
 		f"{dataset_alias}.data_access = 'public'",
-		f"coalesce({dataset_alias}.archive, false) = false",
+		f"coalesce({dataset_alias}.archived, false) = false",
 	]
 
 	if require_acquisition_date:
