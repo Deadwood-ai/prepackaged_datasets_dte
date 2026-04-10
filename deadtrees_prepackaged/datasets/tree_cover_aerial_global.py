@@ -17,6 +17,7 @@ from ..helpers.license import TREE_COVER_REFERENCE, build_license_text
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..postgres.client import connect_postgres
+from ..postgres.filters import public_cc_by_dataset_filters
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
@@ -33,8 +34,7 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 		join v2_datasets d on d.id = p.dataset_id
 		where p.layer_type = 'forest_cover'
 			and p.forest_cover_quality in ('great', 'sentinel_ok')
-			and d.license = 'CC BY'
-			and d.data_access = 'public'
+			and {common_dataset_filters}
 	),
 	doi_info as (
 		select
@@ -75,7 +75,12 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 	left join quality_info q on q.dataset_id = d.id
 	left join doi_info di on di.dataset_id = d.id
 	order by d.id
-"""
+""".format(
+	common_dataset_filters=public_cc_by_dataset_filters(
+		dataset_alias='d',
+		require_acquisition_date=True,
+	),
+)
 
 
 def fetch_eligible_tree_cover_datasets(connection, limit: int | None = None) -> list[dict]:

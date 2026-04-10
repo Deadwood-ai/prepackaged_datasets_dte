@@ -18,6 +18,7 @@ from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..helpers.phenology import passes_phenology_threshold
 from ..postgres.client import connect_postgres
+from ..postgres.filters import public_cc_by_dataset_filters
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
@@ -35,11 +36,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 		join v2_metadata m on m.dataset_id = p.dataset_id
 		where p.layer_type = 'deadwood'
 			and p.deadwood_quality in ('great', 'sentinel_ok')
-			and d.license = 'CC BY'
-			and d.data_access = 'public'
-			and d.aquisition_year is not null
-			and d.aquisition_month is not null
-			and d.aquisition_day is not null
+			and {common_dataset_filters}
 	),
 	doi_info as (
 		select
@@ -81,7 +78,12 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 	left join quality_info q on q.dataset_id = d.id
 	left join doi_info di on di.dataset_id = d.id
 	order by d.id
-"""
+""".format(
+	common_dataset_filters=public_cc_by_dataset_filters(
+		dataset_alias='d',
+		require_acquisition_date=True,
+	),
+)
 
 def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> list[dict]:
 	rows = fetch_dataset_rows(
