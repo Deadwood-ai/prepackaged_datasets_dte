@@ -16,8 +16,10 @@ def build_dataset(name: str, config: BuildConfig) -> BuildResult:
 		from .datasets.tree_cover_drone_global import TreeCoverDroneGlobalDefinition
 		definition = TreeCoverDroneGlobalDefinition()
 	elif name == 'standing-deadwood-drone-global-conservative':
-		from .datasets.standing_deadwood_drone_global import StandingDeadwoodDroneGlobalDefinition
-		definition = StandingDeadwoodDroneGlobalDefinition()
+		from .datasets.standing_deadwood_drone_global_conservative import (
+			StandingDeadwoodDroneGlobalConservativeDefinition,
+		)
+		definition = StandingDeadwoodDroneGlobalConservativeDefinition()
 	else:
 		raise ValueError(f'Unknown dataset definition: {name}')
 

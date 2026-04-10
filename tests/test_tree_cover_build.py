@@ -7,8 +7,8 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 
 from deadtrees_prepackaged.config import BuildConfig
-from deadtrees_prepackaged.datasets.standing_deadwood_drone_global import (
-	StandingDeadwoodDroneGlobalDefinition,
+from deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative import (
+	StandingDeadwoodDroneGlobalConservativeDefinition,
 )
 from deadtrees_prepackaged.datasets.tree_cover_drone_global import TreeCoverDroneGlobalDefinition
 from deadtrees_prepackaged.runner import list_datasets
@@ -186,19 +186,19 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 	]
 
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global.connect_postgres',
+		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative.connect_postgres',
 		fake_connect_postgres,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global.fetch_eligible_deadwood_datasets',
+		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative.fetch_eligible_deadwood_datasets',
 		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global.LabelRepository',
+		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative.LabelRepository',
 		FakeLabelRepository,
 	)
 
-	result = StandingDeadwoodDroneGlobalDefinition().build(make_config(tmp_path))
+	result = StandingDeadwoodDroneGlobalConservativeDefinition().build(make_config(tmp_path))
 	zip_path = result.artifact_paths['zip']
 	extract_dir = tmp_path / 'deadwood_unzipped'
 	extract_dir.mkdir()

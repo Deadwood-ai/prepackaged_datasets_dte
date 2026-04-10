@@ -21,7 +21,7 @@
   - [deadtrees_prepackaged/cli.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/cli.py)
 - Dataset implementation:
   - [deadtrees_prepackaged/datasets/tree_cover_drone_global.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/tree_cover_drone_global.py)
-  - [deadtrees_prepackaged/datasets/standing_deadwood_drone_global.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/standing_deadwood_drone_global.py)
+  - [deadtrees_prepackaged/datasets/standing_deadwood_drone_global_conservative.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/standing_deadwood_drone_global_conservative.py)
 - DB access:
   - [deadtrees_prepackaged/postgres/client.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/postgres/client.py)
   - [deadtrees_prepackaged/postgres/queries.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/postgres/queries.py)
@@ -85,6 +85,7 @@ DEADTREES_DB_SSLMODE=disable \
 
 ## Current Dataset Logic
 - `tree-cover-drone-global`
+  - Eligibility query lives in `deadtrees_prepackaged/datasets/tree_cover_drone_global.py`
   - Eligibility source: `v_export_polygon_candidates`
   - Explicit filters:
     - `layer_type = 'forest_cover'`
@@ -93,6 +94,7 @@ DEADTREES_DB_SSLMODE=disable \
     - `v2_datasets.data_access = 'public'`
   - No explicit platform filter.
 - `standing-deadwood-drone-global-conservative`
+  - Eligibility query lives in `deadtrees_prepackaged/datasets/standing_deadwood_drone_global_conservative.py`
   - Eligibility source: `v_export_polygon_candidates`
   - Explicit filters:
     - `layer_type = 'deadwood'`
@@ -105,6 +107,7 @@ DEADTREES_DB_SSLMODE=disable \
   - AOI fetched from `v2_aois`, assumed single relevant AOI.
   - Exported polygons are clipped to the AOI after loading.
   - Metadata joined from `v2_datasets`, `v2_orthos`, `v2_metadata`, `data_publication`.
+  - `deadtrees_prepackaged/postgres/queries.py` only contains shared query execution helpers, not export-specific SQL filters.
 
 ## Current Export Schema
 - Final deliverable: one ZIP in output root.

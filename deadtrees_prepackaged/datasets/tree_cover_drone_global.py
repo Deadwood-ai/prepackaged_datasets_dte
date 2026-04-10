@@ -15,9 +15,70 @@ from ..helpers.labels import LabelRepository
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..postgres.client import connect_postgres
-from ..postgres.queries import fetch_eligible_tree_cover_datasets
+from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
+
+
+TREE_COVER_ELIGIBLE_DATASETS_SQL = """
+	with eligible as (
+		select distinct
+			p.dataset_id
+		from v_export_polygon_candidates p
+		join v2_datasets d on d.id = p.dataset_id
+		where p.layer_type = 'forest_cover'
+			and p.forest_cover_quality in ('great', 'sentinel_ok')
+			and d.license = 'CC BY'
+			and d.data_access = 'public'
+	),
+	doi_info as (
+		select
+			jt.dataset_id,
+			string_agg(distinct dp.doi, '; ' order by dp.doi) as freidata_doi
+		from jt_data_publication_datasets jt
+		join data_publication dp on dp.id = jt.publication_id
+		where dp.doi is not null
+		group by jt.dataset_id
+	),
+	quality_info as (
+		select
+			dataset_id,
+			min(forest_cover_quality) as forest_cover_quality
+		from v_export_polygon_candidates
+		where layer_type = 'forest_cover'
+		group by dataset_id
+	)
+	select
+		d.id,
+		d.file_name,
+		d.authors,
+		d.aquisition_year,
+		d.aquisition_month,
+		d.aquisition_day,
+		d.additional_information,
+		d.citation_doi,
+		o.bbox::text as bbox,
+		(m.metadata -> 'biome' ->> 'biome_name') as biome_name,
+		q.forest_cover_quality,
+		d.license::text as license,
+		d.platform::text as platform,
+		di.freidata_doi
+	from eligible e
+	join v2_datasets d on d.id = e.dataset_id
+	left join v2_orthos o on o.dataset_id = d.id
+	left join v2_metadata m on m.dataset_id = d.id
+	left join quality_info q on q.dataset_id = d.id
+	left join doi_info di on di.dataset_id = d.id
+	order by d.id
+"""
+
+
+def fetch_eligible_tree_cover_datasets(connection, limit: int | None = None) -> list[dict]:
+	return fetch_dataset_rows(
+		connection=connection,
+		sql=TREE_COVER_ELIGIBLE_DATASETS_SQL,
+		limit=limit,
+	)
 
 
 class TreeCoverDroneGlobalDefinition(DatasetDefinition):
