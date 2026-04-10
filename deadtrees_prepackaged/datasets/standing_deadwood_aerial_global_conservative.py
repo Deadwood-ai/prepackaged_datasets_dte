@@ -5,13 +5,11 @@ import logging
 import shutil
 import zipfile
 from datetime import UTC, datetime
-
-import geopandas as gpd
 import pandas as pd
 
 from ..config import BuildConfig
 from ..helpers.geometry import clip_geometries_to_aoi, keep_polygonal_geometries
-from ..helpers.geopackage import write_polygon_package
+from ..helpers.geopackage import append_geopackage_layer
 from ..helpers.labels import LabelRepository
 from ..helpers.license import STANDING_DEADWOOD_MODEL_REFERENCE, build_license_text
 from ..helpers.manifest import build_manifest
@@ -127,6 +125,7 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 		work_dir = config.working_dir / package_name
 		output_dir = config.output_root
 		zip_path = output_dir / f'{package_name}.zip'
+		gpkg_path = work_dir / f'{package_name}.gpkg'
 
 		if zip_path.exists():
 			if not config.overwrite_existing:
@@ -149,10 +148,10 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 			dataset_rows = fetch_eligible_deadwood_datasets(conn, limit=10 if config.test_mode else None)
 			logger.info("Fetched %s eligible dataset rows for dataset=%s", len(dataset_rows), self.name)
 
-			deadwood_frames: list[gpd.GeoDataFrame] = []
-			aoi_frames: list[gpd.GeoDataFrame] = []
 			metadata_rows: list[dict] = []
 			used_dataset_ids: list[int] = []
+			deadwood_feature_count = 0
+			aoi_feature_count = 0
 
 			for dataset_row in dataset_rows:
 				dataset_id = int(dataset_row['id'])
@@ -166,7 +165,8 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 
 				aoi = labels.get_aoi(dataset_id)
 				logger.info("Loaded %s AOI geometries for dataset_id=%s", len(aoi), dataset_id)
-				aoi_frames.append(aoi)
+				append_geopackage_layer(gpkg_path=gpkg_path, features=aoi, layer='aoi')
+				aoi_feature_count += int(len(aoi))
 				used_dataset_ids.append(dataset_id)
 				metadata_rows.append(build_dataset_metadata_row(dataset_row))
 				if deadwood.empty:
@@ -190,41 +190,28 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 					)
 					continue
 
-				deadwood_frames.append(deadwood)
+				append_geopackage_layer(
+					gpkg_path=gpkg_path,
+					features=deadwood,
+					layer='standing_deadwood',
+				)
+				deadwood_feature_count += int(len(deadwood))
 				logger.info("Accepted dataset_id=%s for dataset=%s", dataset_id, self.name)
 
-		if not deadwood_frames or not aoi_frames:
+		if deadwood_feature_count == 0 or aoi_feature_count == 0:
 			raise ValueError('No eligible deadwood export data found.')
 		logger.info(
-			"Prepared %s datasets with %s metadata rows for dataset=%s",
+			"Prepared %s datasets with %s deadwood features and %s metadata rows for dataset=%s",
 			len(used_dataset_ids),
+			deadwood_feature_count,
 			len(metadata_rows),
 			self.name,
-		)
-
-		deadwood_gdf = gpd.GeoDataFrame(
-			pd.concat(deadwood_frames, ignore_index=True),
-			geometry='geometry',
-			crs='EPSG:4326',
-		)
-		aoi_gdf = gpd.GeoDataFrame(
-			pd.concat(aoi_frames, ignore_index=True),
-			geometry='geometry',
-			crs='EPSG:4326',
-		)
-
-		gpkg_path = work_dir / f'{package_name}.gpkg'
-		write_polygon_package(
-			gpkg_path=gpkg_path,
-			polygons=deadwood_gdf,
-			aoi=aoi_gdf,
-			polygon_layer='standing_deadwood',
 		)
 		logger.info(
 			"Wrote geopackage for dataset=%s path=%s features=%s",
 			self.name,
 			gpkg_path,
-			len(deadwood_gdf),
+			deadwood_feature_count,
 		)
 
 		metadata_csv = work_dir / 'METADATA.csv'
@@ -247,7 +234,7 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 			package_name=package_name,
 			version=version,
 			used_dataset_ids=used_dataset_ids,
-			tree_cover_feature_count=int(len(deadwood_gdf)),
+			tree_cover_feature_count=deadwood_feature_count,
 			dataset_count=int(len(used_dataset_ids)),
 			artifact_names=[
 				gpkg_path.name,

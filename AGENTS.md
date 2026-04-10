@@ -11,6 +11,7 @@
 ## Current State
 - Access method: direct PostgreSQL, not Supabase REST.
 - Output contract: build writes exactly one final ZIP to the root of `--output-root`.
+- GeoPackage layers are written incrementally per dataset using append mode; polygon GeoDataFrames are not accumulated across all datasets before export.
 - Current live-tested path works against existing `DEADTREES_DB_*` env vars when `DEADTREES_DB_SSLMODE=disable`.
 - Test mode works and limits to first 10 eligible dataset IDs.
 - For `standing-deadwood-aerial-global-conservative`, eligible datasets remain in AOI/metadata output even if they contribute zero deadwood polygons after clipping/cleanup.

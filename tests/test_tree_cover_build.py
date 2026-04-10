@@ -175,6 +175,69 @@ def test_build_geopackage_layers_have_expected_columns(monkeypatch, tmp_path):
 	assert list(aoi.columns) == ['dataset_id', 'geometry']
 
 
+def test_build_appends_multiple_datasets_to_single_layers(monkeypatch, tmp_path):
+	dataset_rows = [
+		{
+			'id': 1,
+			'authors': ['Author'],
+			'aquisition_year': 2024,
+			'aquisition_month': 1,
+			'aquisition_day': 2,
+			'additional_information': None,
+			'citation_doi': None,
+			'freidata_doi': None,
+			'bbox': 'BOX(0 0,1 1)',
+			'biome_name': 'Biome',
+			'forest_cover_quality': 'great',
+			'license': 'CC BY',
+			'platform': 'aerial',
+		},
+		{
+			'id': 2,
+			'authors': ['Author'],
+			'aquisition_year': 2024,
+			'aquisition_month': 1,
+			'aquisition_day': 3,
+			'additional_information': None,
+			'citation_doi': None,
+			'freidata_doi': None,
+			'bbox': 'BOX(2 2,3 3)',
+			'biome_name': 'Biome',
+			'forest_cover_quality': 'great',
+			'license': 'CC BY',
+			'platform': 'aerial',
+		},
+	]
+
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.connect_postgres',
+		fake_connect_postgres,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.fetch_eligible_tree_cover_datasets',
+		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.LabelRepository',
+		FakeLabelRepository,
+	)
+
+	result = TreeCoverAerialGlobalDefinition().build(make_config(tmp_path))
+	zip_path = result.artifact_paths['zip']
+	extract_dir = tmp_path / 'multi_dataset_unzipped'
+	extract_dir.mkdir()
+
+	with zipfile.ZipFile(zip_path) as archive:
+		archive.extractall(extract_dir)
+
+	gpkg_path = extract_dir / 'tree-cover-aerial-global_2026.04.09_test.gpkg'
+	tree_cover = gpd.read_file(gpkg_path, layer='tree_cover').sort_values('dataset_id').reset_index(drop=True)
+	aoi = gpd.read_file(gpkg_path, layer='aoi').sort_values('dataset_id').reset_index(drop=True)
+
+	assert tree_cover['dataset_id'].tolist() == [1, 2]
+	assert aoi['dataset_id'].tolist() == [1, 2]
+
+
 def test_list_datasets_includes_deadwood_export():
 	assert list_datasets() == ['standing-deadwood-aerial-global-conservative', 'tree-cover-aerial-global']
 
@@ -433,4 +496,4 @@ def test_exports_write_polygon_only_layers(monkeypatch, tmp_path):
 		gpkg_path = next(extract_dir.glob('*.gpkg'))
 		layer = gpd.read_file(gpkg_path, layer=layer_name)
 		assert set(layer.geometry.geom_type.unique()) == {'Polygon'}
-		assert fiona.listlayers(gpkg_path) == [layer_name, 'aoi']
+		assert set(fiona.listlayers(gpkg_path)) == {layer_name, 'aoi'}
