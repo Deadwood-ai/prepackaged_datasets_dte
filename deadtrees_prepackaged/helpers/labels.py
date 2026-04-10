@@ -23,6 +23,22 @@ class LabelRepository:
 	def __init__(self, connection: Connection):
 		self.connection = connection
 
+	def get_deadwood_geometries(self, dataset_id: int) -> gpd.GeoDataFrame:
+		with self.connection.cursor(row_factory=dict_row) as cur:
+			cur.execute(
+				"""
+				select
+					dataset_id,
+					ST_AsBinary(geometry) as geometry_wkb
+				from v_export_polygon_candidates
+				where dataset_id = %s
+					and layer_type = 'deadwood'
+				order by id
+				""",
+				(dataset_id,),
+			)
+			return _to_geodataframe(cur.fetchall())
+
 	def get_tree_cover_geometries(self, dataset_id: int) -> gpd.GeoDataFrame:
 		with self.connection.cursor(row_factory=dict_row) as cur:
 			cur.execute(

@@ -4,7 +4,9 @@
 - Standalone Python package to build prepackaged deadtrees datasets.
 - Backend is expected to call package/CLI directly.
 - No HTTP/API endpoint in this repo.
-- Current implemented dataset: `tree-cover-drone-global` only.
+- Current implemented datasets:
+  - `tree-cover-drone-global`
+  - `standing-deadwood-drone-global-conservative`
 
 ## Current State
 - Access method: direct PostgreSQL, not Supabase REST.
@@ -19,10 +21,12 @@
   - [deadtrees_prepackaged/cli.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/cli.py)
 - Dataset implementation:
   - [deadtrees_prepackaged/datasets/tree_cover_drone_global.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/tree_cover_drone_global.py)
+  - [deadtrees_prepackaged/datasets/standing_deadwood_drone_global.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/standing_deadwood_drone_global.py)
 - DB access:
   - [deadtrees_prepackaged/postgres/client.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/postgres/client.py)
   - [deadtrees_prepackaged/postgres/queries.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/postgres/queries.py)
 - Export helpers:
+  - [deadtrees_prepackaged/helpers/geometry.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/helpers/geometry.py)
   - [deadtrees_prepackaged/helpers/labels.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/helpers/labels.py)
   - [deadtrees_prepackaged/helpers/metadata.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/helpers/metadata.py)
   - [deadtrees_prepackaged/helpers/geopackage.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/helpers/geopackage.py)
@@ -69,18 +73,38 @@ DEADTREES_DB_SSLMODE=disable \
   --working-dir /tmp/deadtrees_prepackaged_work \
   --test-mode
 ```
+- Test build for standing deadwood:
+```bash
+DEADTREES_DB_SSLMODE=disable \
+/net/home/cmosig/miniconda3/envs/scienceagent/bin/python -m deadtrees_prepackaged.cli build standing-deadwood-drone-global-conservative \
+  --storage-root /tmp \
+  --output-root /tmp/deadtrees_prepackaged_out \
+  --working-dir /tmp/deadtrees_prepackaged_work \
+  --test-mode
+```
 
 ## Current Dataset Logic
-- Dataset name: `tree-cover-drone-global`
-- Eligibility source: `v_export_polygon_candidates`
-- Explicit filters:
-  - `layer_type = 'forest_cover'`
-  - `forest_cover_quality in ('great', 'sentinel_ok')`
-  - `v2_datasets.license = 'CC BY'`
-  - `v2_datasets.data_access = 'public'`
-- No explicit platform filter.
-- AOI fetched from `v2_aois`, assumed single relevant AOI.
-- Metadata joined from `v2_datasets`, `v2_orthos`, `v2_metadata`, `data_publication`.
+- `tree-cover-drone-global`
+  - Eligibility source: `v_export_polygon_candidates`
+  - Explicit filters:
+    - `layer_type = 'forest_cover'`
+    - `forest_cover_quality in ('great', 'sentinel_ok')`
+    - `v2_datasets.license = 'CC BY'`
+    - `v2_datasets.data_access = 'public'`
+  - No explicit platform filter.
+- `standing-deadwood-drone-global-conservative`
+  - Eligibility source: `v_export_polygon_candidates`
+  - Explicit filters:
+    - `layer_type = 'deadwood'`
+    - `deadwood_quality in ('great', 'sentinel_ok')`
+    - `v2_datasets.license = 'CC BY'`
+    - `v2_datasets.data_access = 'public'`
+    - acquisition year/month/day all present
+    - phenology indicator at acquisition day-of-year is `> 128`
+- Shared behavior:
+  - AOI fetched from `v2_aois`, assumed single relevant AOI.
+  - Exported polygons are clipped to the AOI after loading.
+  - Metadata joined from `v2_datasets`, `v2_orthos`, `v2_metadata`, `data_publication`.
 
 ## Current Export Schema
 - Final deliverable: one ZIP in output root.
@@ -90,6 +114,9 @@ DEADTREES_DB_SSLMODE=disable \
   - `METADATA.parquet`
   - `manifest.json`
 - Current `tree_cover` layer columns:
+  - `dataset_id`
+  - `geometry`
+- Current `standing_deadwood` layer columns:
   - `dataset_id`
   - `geometry`
 - Current `aoi` layer columns:
@@ -125,6 +152,8 @@ DEADTREES_DB_SSLMODE=disable \
 - `test_metadata_row_omits_file_name`
 - `test_build_creates_single_zip_and_cleans_intermediate_files`
 - `test_build_geopackage_layers_have_expected_columns`
+- `test_list_datasets_includes_deadwood_export`
+- `test_deadwood_build_creates_expected_layer`
 
 ## Known Conversation Decisions
 - No backend HTTP endpoint in this repo.

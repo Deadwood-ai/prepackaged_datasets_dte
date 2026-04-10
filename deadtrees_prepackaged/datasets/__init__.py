@@ -1,3 +1,4 @@
+from .standing_deadwood_drone_global import StandingDeadwoodDroneGlobalDefinition
 from .tree_cover_drone_global import TreeCoverDroneGlobalDefinition
 
-__all__ = ['TreeCoverDroneGlobalDefinition']
+__all__ = ['StandingDeadwoodDroneGlobalDefinition', 'TreeCoverDroneGlobalDefinition']
