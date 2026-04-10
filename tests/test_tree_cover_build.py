@@ -115,13 +115,7 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 		assert manifest['source_reference']['file'] == (
 			'deadtrees_prepackaged/datasets/tree_cover_aerial_global.py'
 		)
-		assert manifest['source_reference']['commit']
-		assert manifest['source_reference']['repository_url'] == (
-			'https://github.com/Deadwood-ai/prepackaged_datasets_dte'
-		)
-		assert manifest['source_reference']['github_url'].endswith(
-			'/deadtrees_prepackaged/datasets/tree_cover_aerial_global.py'
-		)
+		assert 'package_version' in manifest['source_reference']
 
 
 def test_build_geopackage_layers_have_expected_columns(monkeypatch, tmp_path):

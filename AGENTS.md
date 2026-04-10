@@ -116,7 +116,7 @@ DEADTREES_DB_SSLMODE=disable \
   - `METADATA.csv`
   - `METADATA.parquet`
   - `manifest.json`
-  - `manifest.json` includes a `source_reference` object with the dataset-definition file path, source commit, repository URL, and GitHub blob URL when the commit is available.
+  - `manifest.json` includes a `source_reference` object with the dataset-definition file path and installed package version.
 - Current `tree_cover` layer columns:
   - `dataset_id`
   - `geometry`
