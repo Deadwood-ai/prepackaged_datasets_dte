@@ -4,7 +4,7 @@ import json
 import logging
 import shutil
 import zipfile
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
 import geopandas as gpd
 import pandas as pd
@@ -16,6 +16,7 @@ from ..helpers.labels import LabelRepository
 from ..helpers.license import build_license_text
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
+from ..helpers.phenology import passes_phenology_threshold
 from ..postgres.client import connect_postgres
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
@@ -82,25 +83,6 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 	order by d.id
 """
 
-
-def _passes_phenology_filter(dataset_row: dict) -> bool:
-	year = dataset_row.get('aquisition_year')
-	month = dataset_row.get('aquisition_month')
-	day = dataset_row.get('aquisition_day')
-	phenology_curve = dataset_row.get('phenology_curve')
-
-	if year is None or month is None or day is None or not phenology_curve:
-		return False
-
-	try:
-		doy_index = date(int(year), int(month), int(day)).timetuple().tm_yday - 1
-		curve = json.loads(phenology_curve)
-		value = curve[doy_index]
-		return int(value) > 128
-	except (ValueError, TypeError, KeyError, IndexError, json.JSONDecodeError):
-		return False
-
-
 def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> list[dict]:
 	rows = fetch_dataset_rows(
 		connection=connection,
@@ -108,7 +90,9 @@ def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> li
 		limit=None,
 		query_name='standing deadwood eligible dataset query',
 	)
-	filtered_rows = [row for row in rows if _passes_phenology_filter(row)]
+	filtered_rows = [
+		row for row in rows if passes_phenology_threshold(row, threshold=128)
+	]
 	logger.info(
 		"Filtered standing deadwood candidates by phenology: %s -> %s rows",
 		len(rows),
