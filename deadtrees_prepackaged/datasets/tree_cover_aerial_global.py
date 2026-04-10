@@ -81,10 +81,10 @@ def fetch_eligible_tree_cover_datasets(connection, limit: int | None = None) -> 
 	)
 
 
-class TreeCoverDroneGlobalDefinition(DatasetDefinition):
-	name = 'tree-cover-drone-global'
+class TreeCoverAerialGlobalDefinition(DatasetDefinition):
+	name = 'tree-cover-aerial-global'
 	user_description = (
-		'Export of all tree cover polygons derived from drone orthophotos.'
+		'Export of all tree cover polygons derived from aerial orthophotos.'
 	)
 	technical_description = (
 		'All tree cover polygons clipped to the AOI of audited public CC-BY datasets '

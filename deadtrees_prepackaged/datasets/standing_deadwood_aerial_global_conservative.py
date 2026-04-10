@@ -20,7 +20,7 @@ from ..result import BuildResult
 from .base import DatasetDefinition
 
 
-STANDING_DEADWOOD_DRONE_GLOBAL_CONSERVATIVE_SQL = """
+STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 	with eligible as (
 		select distinct
 			p.dataset_id
@@ -83,15 +83,15 @@ STANDING_DEADWOOD_DRONE_GLOBAL_CONSERVATIVE_SQL = """
 
 
 def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> list[dict]:
-	return fetch_dataset_rows(
+		return fetch_dataset_rows(
 		connection=connection,
-		sql=STANDING_DEADWOOD_DRONE_GLOBAL_CONSERVATIVE_SQL,
+		sql=STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL,
 		limit=limit,
 	)
 
 
-class StandingDeadwoodDroneGlobalConservativeDefinition(DatasetDefinition):
-	name = 'standing-deadwood-drone-global-conservative'
+class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
+	name = 'standing-deadwood-aerial-global-conservative'
 	user_description = (
 		'Conservative export of standing deadwood cover polygons derived from orthophotos.'
 	)

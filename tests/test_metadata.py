@@ -17,7 +17,7 @@ def test_metadata_row_omits_file_name():
 			'biome_name': 'Biome',
 			'forest_cover_quality': 'great',
 			'license': 'CC BY',
-			'platform': 'drone',
+			'platform': 'aerial',
 		}
 	)
 

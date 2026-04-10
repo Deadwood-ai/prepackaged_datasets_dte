@@ -5,8 +5,8 @@
 - Backend is expected to call package/CLI directly.
 - No HTTP/API endpoint in this repo.
 - Current implemented datasets:
-  - `tree-cover-drone-global`
-  - `standing-deadwood-drone-global-conservative`
+  - `tree-cover-aerial-global`
+  - `standing-deadwood-aerial-global-conservative`
 
 ## Current State
 - Access method: direct PostgreSQL, not Supabase REST.
@@ -20,8 +20,8 @@
   - [deadtrees_prepackaged/runner.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/runner.py)
   - [deadtrees_prepackaged/cli.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/cli.py)
 - Dataset implementation:
-  - [deadtrees_prepackaged/datasets/tree_cover_drone_global.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/tree_cover_drone_global.py)
-  - [deadtrees_prepackaged/datasets/standing_deadwood_drone_global_conservative.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/standing_deadwood_drone_global_conservative.py)
+  - [deadtrees_prepackaged/datasets/tree_cover_aerial_global.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/tree_cover_aerial_global.py)
+  - [deadtrees_prepackaged/datasets/standing_deadwood_aerial_global_conservative.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/datasets/standing_deadwood_aerial_global_conservative.py)
 - DB access:
   - [deadtrees_prepackaged/postgres/client.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/postgres/client.py)
   - [deadtrees_prepackaged/postgres/queries.py](/net/home/cmosig/projects/prepackaged_datasets_dte/deadtrees_prepackaged/postgres/queries.py)
@@ -67,7 +67,7 @@ pip install -e .[test]
 - Test build:
 ```bash
 DEADTREES_DB_SSLMODE=disable \
-/net/home/cmosig/miniconda3/envs/scienceagent/bin/python -m deadtrees_prepackaged.cli build tree-cover-drone-global \
+/net/home/cmosig/miniconda3/envs/scienceagent/bin/python -m deadtrees_prepackaged.cli build tree-cover-aerial-global \
   --storage-root /tmp \
   --output-root /tmp/deadtrees_prepackaged_out \
   --working-dir /tmp/deadtrees_prepackaged_work \
@@ -76,7 +76,7 @@ DEADTREES_DB_SSLMODE=disable \
 - Test build for standing deadwood:
 ```bash
 DEADTREES_DB_SSLMODE=disable \
-/net/home/cmosig/miniconda3/envs/scienceagent/bin/python -m deadtrees_prepackaged.cli build standing-deadwood-drone-global-conservative \
+/net/home/cmosig/miniconda3/envs/scienceagent/bin/python -m deadtrees_prepackaged.cli build standing-deadwood-aerial-global-conservative \
   --storage-root /tmp \
   --output-root /tmp/deadtrees_prepackaged_out \
   --working-dir /tmp/deadtrees_prepackaged_work \
@@ -84,8 +84,8 @@ DEADTREES_DB_SSLMODE=disable \
 ```
 
 ## Current Dataset Logic
-- `tree-cover-drone-global`
-  - Eligibility query lives in `deadtrees_prepackaged/datasets/tree_cover_drone_global.py`
+- `tree-cover-aerial-global`
+  - Eligibility query lives in `deadtrees_prepackaged/datasets/tree_cover_aerial_global.py`
   - Eligibility source: `v_export_polygon_candidates`
   - Explicit filters:
     - `layer_type = 'forest_cover'`
@@ -93,8 +93,8 @@ DEADTREES_DB_SSLMODE=disable \
     - `v2_datasets.license = 'CC BY'`
     - `v2_datasets.data_access = 'public'`
   - No explicit platform filter.
-- `standing-deadwood-drone-global-conservative`
-  - Eligibility query lives in `deadtrees_prepackaged/datasets/standing_deadwood_drone_global_conservative.py`
+- `standing-deadwood-aerial-global-conservative`
+  - Eligibility query lives in `deadtrees_prepackaged/datasets/standing_deadwood_aerial_global_conservative.py`
   - Eligibility source: `v_export_polygon_candidates`
   - Explicit filters:
     - `layer_type = 'deadwood'`

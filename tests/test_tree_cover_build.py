@@ -7,10 +7,10 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 
 from deadtrees_prepackaged.config import BuildConfig
-from deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative import (
-	StandingDeadwoodDroneGlobalConservativeDefinition,
+from deadtrees_prepackaged.datasets.standing_deadwood_aerial_global_conservative import (
+	StandingDeadwoodAerialGlobalConservativeDefinition,
 )
-from deadtrees_prepackaged.datasets.tree_cover_drone_global import TreeCoverDroneGlobalDefinition
+from deadtrees_prepackaged.datasets.tree_cover_aerial_global import TreeCoverAerialGlobalDefinition
 from deadtrees_prepackaged.runner import list_datasets
 
 
@@ -77,24 +77,24 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 			'biome_name': 'Biome',
 			'forest_cover_quality': 'great',
 			'license': 'CC BY',
-			'platform': 'drone',
+			'platform': 'aerial',
 		}
 	]
 
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.tree_cover_drone_global.connect_postgres',
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.connect_postgres',
 		fake_connect_postgres,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.tree_cover_drone_global.fetch_eligible_tree_cover_datasets',
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.fetch_eligible_tree_cover_datasets',
 		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.tree_cover_drone_global.LabelRepository',
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.LabelRepository',
 		FakeLabelRepository,
 	)
 
-	result = TreeCoverDroneGlobalDefinition().build(make_config(tmp_path))
+	result = TreeCoverAerialGlobalDefinition().build(make_config(tmp_path))
 
 	zip_path = result.artifact_paths['zip']
 	assert zip_path.exists()
@@ -107,7 +107,7 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 			'METADATA.csv',
 			'METADATA.parquet',
 			'manifest.json',
-			'tree-cover-drone-global_2026.04.09_test.gpkg',
+			'tree-cover-aerial-global_2026.04.09_test.gpkg',
 		]
 		manifest = json.loads(archive.read('manifest.json').decode('utf-8'))
 		assert manifest['test_mode'] is True
@@ -129,24 +129,24 @@ def test_build_geopackage_layers_have_expected_columns(monkeypatch, tmp_path):
 			'biome_name': 'Biome',
 			'forest_cover_quality': 'great',
 			'license': 'CC BY',
-			'platform': 'drone',
+			'platform': 'aerial',
 		}
 	]
 
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.tree_cover_drone_global.connect_postgres',
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.connect_postgres',
 		fake_connect_postgres,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.tree_cover_drone_global.fetch_eligible_tree_cover_datasets',
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.fetch_eligible_tree_cover_datasets',
 		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.tree_cover_drone_global.LabelRepository',
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.LabelRepository',
 		FakeLabelRepository,
 	)
 
-	result = TreeCoverDroneGlobalDefinition().build(make_config(tmp_path))
+	result = TreeCoverAerialGlobalDefinition().build(make_config(tmp_path))
 	zip_path = result.artifact_paths['zip']
 	extract_dir = tmp_path / 'unzipped'
 	extract_dir.mkdir()
@@ -154,7 +154,7 @@ def test_build_geopackage_layers_have_expected_columns(monkeypatch, tmp_path):
 	with zipfile.ZipFile(zip_path) as archive:
 		archive.extractall(extract_dir)
 
-	gpkg_path = extract_dir / 'tree-cover-drone-global_2026.04.09_test.gpkg'
+	gpkg_path = extract_dir / 'tree-cover-aerial-global_2026.04.09_test.gpkg'
 	tree_cover = gpd.read_file(gpkg_path, layer='tree_cover')
 	aoi = gpd.read_file(gpkg_path, layer='aoi')
 
@@ -163,7 +163,7 @@ def test_build_geopackage_layers_have_expected_columns(monkeypatch, tmp_path):
 
 
 def test_list_datasets_includes_deadwood_export():
-	assert list_datasets() == ['standing-deadwood-drone-global-conservative', 'tree-cover-drone-global']
+	assert list_datasets() == ['standing-deadwood-aerial-global-conservative', 'tree-cover-aerial-global']
 
 
 def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
@@ -181,24 +181,24 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 			'biome_name': 'Biome',
 			'deadwood_quality': 'great',
 			'license': 'CC BY',
-			'platform': 'drone',
+			'platform': 'aerial',
 		}
 	]
 
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative.connect_postgres',
+		'deadtrees_prepackaged.datasets.standing_deadwood_aerial_global_conservative.connect_postgres',
 		fake_connect_postgres,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative.fetch_eligible_deadwood_datasets',
+		'deadtrees_prepackaged.datasets.standing_deadwood_aerial_global_conservative.fetch_eligible_deadwood_datasets',
 		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
 	)
 	monkeypatch.setattr(
-		'deadtrees_prepackaged.datasets.standing_deadwood_drone_global_conservative.LabelRepository',
+		'deadtrees_prepackaged.datasets.standing_deadwood_aerial_global_conservative.LabelRepository',
 		FakeLabelRepository,
 	)
 
-	result = StandingDeadwoodDroneGlobalConservativeDefinition().build(make_config(tmp_path))
+	result = StandingDeadwoodAerialGlobalConservativeDefinition().build(make_config(tmp_path))
 	zip_path = result.artifact_paths['zip']
 	extract_dir = tmp_path / 'deadwood_unzipped'
 	extract_dir.mkdir()
@@ -206,7 +206,7 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 	with zipfile.ZipFile(zip_path) as archive:
 		archive.extractall(extract_dir)
 
-	gpkg_path = extract_dir / 'standing-deadwood-drone-global-conservative_2026.04.09_test.gpkg'
+	gpkg_path = extract_dir / 'standing-deadwood-aerial-global-conservative_2026.04.09_test.gpkg'
 	deadwood = gpd.read_file(gpkg_path, layer='standing_deadwood')
 	aoi = gpd.read_file(gpkg_path, layer='aoi')
 

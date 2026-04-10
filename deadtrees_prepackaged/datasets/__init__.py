@@ -1,6 +1,6 @@
-from .standing_deadwood_drone_global_conservative import (
-	StandingDeadwoodDroneGlobalConservativeDefinition,
+from .standing_deadwood_aerial_global_conservative import (
+	StandingDeadwoodAerialGlobalConservativeDefinition,
 )
-from .tree_cover_drone_global import TreeCoverDroneGlobalDefinition
+from .tree_cover_aerial_global import TreeCoverAerialGlobalDefinition
 
-__all__ = ['StandingDeadwoodDroneGlobalConservativeDefinition', 'TreeCoverDroneGlobalDefinition']
+__all__ = ['StandingDeadwoodAerialGlobalConservativeDefinition', 'TreeCoverAerialGlobalDefinition']
