@@ -13,6 +13,7 @@
 - Output contract: build writes exactly one final ZIP to the root of `--output-root`.
 - Current live-tested path works against existing `DEADTREES_DB_*` env vars when `DEADTREES_DB_SSLMODE=disable`.
 - Test mode works and limits to first 10 eligible dataset IDs.
+- For `standing-deadwood-aerial-global-conservative`, eligible datasets remain in AOI/metadata output even if they contribute zero deadwood polygons after clipping/cleanup.
 
 ## Important Files
 - Package entry:
@@ -103,6 +104,7 @@ DEADTREES_DB_SSLMODE=disable \
     - `v2_datasets.data_access = 'public'`
     - acquisition year/month/day all present
     - phenology indicator at acquisition day-of-year is `> 128`, applied locally in Python after candidate rows are fetched
+  - Eligible datasets are retained in AOI and metadata outputs even when no deadwood polygons remain after AOI clipping/geometry cleanup.
 - Shared behavior:
   - AOI fetched from `v2_aois`, assumed single relevant AOI.
   - Exported polygons are clipped to the AOI after loading.

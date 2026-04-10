@@ -10,7 +10,7 @@ import geopandas as gpd
 import pandas as pd
 
 from ..config import BuildConfig
-from ..helpers.geometry import clip_geometries_to_aoi
+from ..helpers.geometry import clip_geometries_to_aoi, keep_polygonal_geometries
 from ..helpers.geopackage import write_polygon_package
 from ..helpers.labels import LabelRepository
 from ..helpers.license import STANDING_DEADWOOD_MODEL_REFERENCE, build_license_text
@@ -162,26 +162,34 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 					len(deadwood),
 					dataset_id,
 				)
-				if deadwood.empty:
-					logger.info("Skipping dataset_id=%s because no deadwood geometries were found", dataset_id)
-					continue
 
 				aoi = labels.get_aoi(dataset_id)
 				logger.info("Loaded %s AOI geometries for dataset_id=%s", len(aoi), dataset_id)
+				aoi_frames.append(aoi)
+				used_dataset_ids.append(dataset_id)
+				metadata_rows.append(build_dataset_metadata_row(dataset_row))
+				if deadwood.empty:
+					logger.info(
+						"Accepted dataset_id=%s with zero deadwood geometries; retaining AOI and metadata only",
+						dataset_id,
+					)
+					continue
+
 				deadwood = clip_geometries_to_aoi(deadwood, aoi)
+				deadwood = keep_polygonal_geometries(deadwood)
 				logger.info(
-					"After AOI clipping dataset_id=%s has %s deadwood geometries",
+					"After AOI clipping and polygon cleanup dataset_id=%s has %s deadwood geometries",
 					dataset_id,
 					len(deadwood),
 				)
 				if deadwood.empty:
-					logger.info("Skipping dataset_id=%s because all geometries were removed after clipping", dataset_id)
+					logger.info(
+						"Accepted dataset_id=%s with zero deadwood geometries after clipping/cleanup; retaining AOI and metadata only",
+						dataset_id,
+					)
 					continue
 
 				deadwood_frames.append(deadwood)
-				aoi_frames.append(aoi)
-				used_dataset_ids.append(dataset_id)
-				metadata_rows.append(build_dataset_metadata_row(dataset_row))
 				logger.info("Accepted dataset_id=%s for dataset=%s", dataset_id, self.name)
 
 		if not deadwood_frames or not aoi_frames:

@@ -10,7 +10,7 @@ import geopandas as gpd
 import pandas as pd
 
 from ..config import BuildConfig
-from ..helpers.geometry import clip_geometries_to_aoi
+from ..helpers.geometry import clip_geometries_to_aoi, keep_polygonal_geometries
 from ..helpers.geopackage import write_tree_cover_package
 from ..helpers.labels import LabelRepository
 from ..helpers.license import TREE_COVER_REFERENCE, build_license_text
@@ -155,8 +155,9 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 				aoi = labels.get_aoi(dataset_id)
 				logger.info("Loaded %s AOI geometries for dataset_id=%s", len(aoi), dataset_id)
 				tree_cover = clip_geometries_to_aoi(tree_cover, aoi)
+				tree_cover = keep_polygonal_geometries(tree_cover)
 				logger.info(
-					"After AOI clipping dataset_id=%s has %s tree cover geometries",
+					"After AOI clipping and polygon cleanup dataset_id=%s has %s tree cover geometries",
 					dataset_id,
 					len(tree_cover),
 				)

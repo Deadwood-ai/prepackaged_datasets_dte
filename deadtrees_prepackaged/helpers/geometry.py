@@ -4,6 +4,17 @@ import geopandas as gpd
 import shapely
 
 
+def keep_polygonal_geometries(geometries: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+	if geometries.empty:
+		return geometries
+
+	geometries = geometries.copy()
+	geometries['geometry'] = shapely.make_valid(geometries.geometry.array)
+	geometries = geometries.explode(index_parts=False)
+	geometries = geometries[geometries.geometry.geom_type.isin(['Polygon', 'MultiPolygon'])].copy()
+	return geometries[~geometries.geometry.is_empty].copy()
+
+
 def clip_geometries_to_aoi(polygons: gpd.GeoDataFrame, aoi: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 	if polygons.empty or aoi.empty:
 		return polygons
