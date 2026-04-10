@@ -4,7 +4,7 @@ import json
 import logging
 import shutil
 import zipfile
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import geopandas as gpd
 import pandas as pd
@@ -39,11 +39,6 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 			and d.aquisition_year is not null
 			and d.aquisition_month is not null
 			and d.aquisition_day is not null
-			and (
-				(m.metadata -> 'phenology' -> 'phenology_curve' ->> (
-					extract(doy from make_date(d.aquisition_year, d.aquisition_month, d.aquisition_day))::int - 1
-				))::int > 128
-			)
 	),
 	doi_info as (
 		select
@@ -73,6 +68,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 		d.citation_doi,
 		o.bbox::text as bbox,
 		(m.metadata -> 'biome' ->> 'biome_name') as biome_name,
+		(m.metadata -> 'phenology' -> 'phenology_curve')::text as phenology_curve,
 		q.deadwood_quality,
 		d.license::text as license,
 		d.platform::text as platform,
@@ -87,13 +83,40 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 """
 
 
+def _passes_phenology_filter(dataset_row: dict) -> bool:
+	year = dataset_row.get('aquisition_year')
+	month = dataset_row.get('aquisition_month')
+	day = dataset_row.get('aquisition_day')
+	phenology_curve = dataset_row.get('phenology_curve')
+
+	if year is None or month is None or day is None or not phenology_curve:
+		return False
+
+	try:
+		doy_index = date(int(year), int(month), int(day)).timetuple().tm_yday - 1
+		curve = json.loads(phenology_curve)
+		value = curve[doy_index]
+		return int(value) > 128
+	except (ValueError, TypeError, KeyError, IndexError, json.JSONDecodeError):
+		return False
+
+
 def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> list[dict]:
-	return fetch_dataset_rows(
+	rows = fetch_dataset_rows(
 		connection=connection,
 		sql=STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL,
-		limit=limit,
+		limit=None,
 		query_name='standing deadwood eligible dataset query',
 	)
+	filtered_rows = [row for row in rows if _passes_phenology_filter(row)]
+	logger.info(
+		"Filtered standing deadwood candidates by phenology: %s -> %s rows",
+		len(rows),
+		len(filtered_rows),
+	)
+	if limit is not None:
+		return filtered_rows[:limit]
+	return filtered_rows
 
 
 class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):

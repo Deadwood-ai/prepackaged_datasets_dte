@@ -102,7 +102,7 @@ DEADTREES_DB_SSLMODE=disable \
     - `v2_datasets.license = 'CC BY'`
     - `v2_datasets.data_access = 'public'`
     - acquisition year/month/day all present
-    - phenology indicator at acquisition day-of-year is `> 128`
+    - phenology indicator at acquisition day-of-year is `> 128`, applied locally in Python after candidate rows are fetched
 - Shared behavior:
   - AOI fetched from `v2_aois`, assumed single relevant AOI.
   - Exported polygons are clipped to the AOI after loading.

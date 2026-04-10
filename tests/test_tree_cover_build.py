@@ -198,6 +198,7 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 			'freidata_doi': '10.1000/beta; 10.1000/alpha',
 			'bbox': 'BOX(0 0,1 1)',
 			'biome_name': 'Biome',
+			'phenology_curve': '[200]',
 			'deadwood_quality': 'great',
 			'license': 'CC BY',
 			'platform': 'aerial',
