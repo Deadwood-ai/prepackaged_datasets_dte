@@ -113,9 +113,11 @@ DEADTREES_DB_SSLMODE=disable \
 - Final deliverable: one ZIP in output root.
 - ZIP contents:
   - `<package_name>.gpkg`
+  - `LICENSE.txt`
   - `METADATA.csv`
   - `METADATA.parquet`
   - `manifest.json`
+  - `LICENSE.txt` is always included for all packages and contains the `CC BY 4.0` license, all unique authors in alphabetical order, and all existing DOI values already present in the source metadata.
   - `manifest.json` includes a `source_reference` object with the dataset-definition file path and installed package version.
 - Current `tree_cover` layer columns:
   - `dataset_id`

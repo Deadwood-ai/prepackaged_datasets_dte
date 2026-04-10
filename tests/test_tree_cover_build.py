@@ -66,13 +66,13 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 	dataset_rows = [
 		{
 			'id': 1,
-			'authors': ['Author'],
+			'authors': ['Zed', 'Alice'],
 			'aquisition_year': 2024,
 			'aquisition_month': 1,
 			'aquisition_day': 2,
 			'additional_information': None,
-			'citation_doi': None,
-			'freidata_doi': None,
+			'citation_doi': '10.1000/zeta',
+			'freidata_doi': '10.1000/alpha; 10.1000/beta',
 			'bbox': 'BOX(0 0,1 1)',
 			'biome_name': 'Biome',
 			'forest_cover_quality': 'great',
@@ -104,11 +104,26 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 	with zipfile.ZipFile(zip_path) as archive:
 		names = sorted(archive.namelist())
 		assert names == [
+			'LICENSE.txt',
 			'METADATA.csv',
 			'METADATA.parquet',
 			'manifest.json',
 			'tree-cover-aerial-global_2026.04.09_test.gpkg',
 		]
+		license_text = archive.read('LICENSE.txt').decode('utf-8')
+		assert license_text == (
+			'License: CC BY 4.0\n'
+			'License URL: https://creativecommons.org/licenses/by/4.0/\n'
+			'\n'
+			'Authors:\n'
+			'Alice\n'
+			'Zed\n'
+			'\n'
+			'Existing DOIs:\n'
+			'10.1000/alpha\n'
+			'10.1000/beta\n'
+			'10.1000/zeta\n'
+		)
 		manifest = json.loads(archive.read('manifest.json').decode('utf-8'))
 		assert manifest['test_mode'] is True
 		assert manifest['used_dataset_ids'] == [1]
@@ -174,13 +189,13 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 	dataset_rows = [
 		{
 			'id': 1,
-			'authors': ['Author'],
+			'authors': ['Gamma', 'Beta'],
 			'aquisition_year': 2024,
 			'aquisition_month': 1,
 			'aquisition_day': 2,
 			'additional_information': None,
-			'citation_doi': None,
-			'freidata_doi': None,
+			'citation_doi': '10.1000/gamma',
+			'freidata_doi': '10.1000/beta; 10.1000/alpha',
 			'bbox': 'BOX(0 0,1 1)',
 			'biome_name': 'Biome',
 			'deadwood_quality': 'great',
@@ -209,6 +224,20 @@ def test_deadwood_build_creates_expected_layer(monkeypatch, tmp_path):
 
 	with zipfile.ZipFile(zip_path) as archive:
 		archive.extractall(extract_dir)
+		license_text = archive.read('LICENSE.txt').decode('utf-8')
+		assert license_text == (
+			'License: CC BY 4.0\n'
+			'License URL: https://creativecommons.org/licenses/by/4.0/\n'
+			'\n'
+			'Authors:\n'
+			'Beta\n'
+			'Gamma\n'
+			'\n'
+			'Existing DOIs:\n'
+			'10.1000/alpha\n'
+			'10.1000/beta\n'
+			'10.1000/gamma\n'
+		)
 
 	gpkg_path = extract_dir / 'standing-deadwood-aerial-global-conservative_2026.04.09_test.gpkg'
 	deadwood = gpd.read_file(gpkg_path, layer='standing_deadwood')

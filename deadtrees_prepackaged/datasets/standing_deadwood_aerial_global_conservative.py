@@ -12,6 +12,7 @@ from ..config import BuildConfig
 from ..helpers.geometry import clip_geometries_to_aoi
 from ..helpers.geopackage import write_polygon_package
 from ..helpers.labels import LabelRepository
+from ..helpers.license import build_license_text
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..postgres.client import connect_postgres
@@ -170,9 +171,11 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 
 		metadata_csv = work_dir / 'METADATA.csv'
 		metadata_parquet = work_dir / 'METADATA.parquet'
+		license_path = work_dir / 'LICENSE.txt'
 		metadata_df = pd.DataFrame(metadata_rows)
 		metadata_df.to_csv(metadata_csv, index=False)
 		metadata_df.to_parquet(metadata_parquet, index=False)
+		license_path.write_text(build_license_text(dataset_rows), encoding='utf-8')
 
 		manifest = build_manifest(
 			dataset_name=self.name,
@@ -181,7 +184,13 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 			used_dataset_ids=used_dataset_ids,
 			tree_cover_feature_count=int(len(deadwood_gdf)),
 			dataset_count=int(len(used_dataset_ids)),
-			artifact_names=[gpkg_path.name, metadata_csv.name, metadata_parquet.name, 'manifest.json'],
+			artifact_names=[
+				gpkg_path.name,
+				metadata_csv.name,
+				metadata_parquet.name,
+				license_path.name,
+				'manifest.json',
+			],
 			test_mode=config.test_mode,
 			source_file=self.source_file,
 		)
