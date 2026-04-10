@@ -33,6 +33,7 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 		from v_export_polygon_candidates p
 		join v2_datasets d on d.id = p.dataset_id
 		where p.layer_type = 'forest_cover'
+			and p.final_assessment = 'no_issues'
 			and p.forest_cover_quality in ('great', 'sentinel_ok')
 			and {common_dataset_filters}
 	),

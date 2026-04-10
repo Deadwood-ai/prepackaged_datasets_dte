@@ -110,7 +110,8 @@ DEADTREES_DB_SSLMODE=disable \
   - Exported polygons are clipped to the AOI after loading.
   - Metadata joined from `v2_datasets`, `v2_orthos`, `v2_metadata`, `data_publication`.
   - `deadtrees_prepackaged/postgres/queries.py` only contains shared query execution helpers, not export-specific SQL filters.
-  - Shared baseline dataset SQL filters live in `deadtrees_prepackaged/postgres/filters.py` and currently enforce `license = 'CC BY'`, `data_access = 'public'`, `archive = false`, and acquisition date presence.
+- Shared baseline dataset SQL filters live in `deadtrees_prepackaged/postgres/filters.py` and currently enforce `license = 'CC BY'`, `data_access = 'public'`, `archived = false`, and acquisition date presence.
+- Current export eligibility SQL additionally enforces `v_export_polygon_candidates.final_assessment = 'no_issues'` so only audited datasets are included.
 
 ## Current Export Schema
 - Final deliverable: one ZIP in output root.

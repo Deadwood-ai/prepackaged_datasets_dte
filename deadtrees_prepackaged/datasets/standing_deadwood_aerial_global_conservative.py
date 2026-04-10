@@ -35,6 +35,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 		join v2_datasets d on d.id = p.dataset_id
 		join v2_metadata m on m.dataset_id = p.dataset_id
 		where p.layer_type = 'deadwood'
+			and p.final_assessment = 'no_issues'
 			and p.deadwood_quality in ('great', 'sentinel_ok')
 			and {common_dataset_filters}
 	),
