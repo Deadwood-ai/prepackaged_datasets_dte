@@ -83,6 +83,7 @@ def fetch_eligible_tree_cover_datasets(connection, limit: int | None = None) -> 
 
 class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 	name = 'tree-cover-aerial-global'
+	source_file = 'deadtrees_prepackaged/datasets/tree_cover_aerial_global.py'
 	user_description = (
 		'Export of all tree cover polygons derived from aerial orthophotos.'
 	)
@@ -167,6 +168,7 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 			dataset_count=int(len(used_dataset_ids)),
 			artifact_names=[gpkg_path.name, metadata_csv.name, metadata_parquet.name, 'manifest.json'],
 			test_mode=config.test_mode,
+			source_file=self.source_file,
 		)
 		manifest_path = work_dir / 'manifest.json'
 		manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')

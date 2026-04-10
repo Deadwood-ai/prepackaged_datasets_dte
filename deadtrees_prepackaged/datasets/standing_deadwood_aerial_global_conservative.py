@@ -92,6 +92,7 @@ def fetch_eligible_deadwood_datasets(connection, limit: int | None = None) -> li
 
 class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 	name = 'standing-deadwood-aerial-global-conservative'
+	source_file = 'deadtrees_prepackaged/datasets/standing_deadwood_aerial_global_conservative.py'
 	user_description = (
 		'Conservative export of standing deadwood cover polygons derived from orthophotos.'
 	)
@@ -182,6 +183,7 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 			dataset_count=int(len(used_dataset_ids)),
 			artifact_names=[gpkg_path.name, metadata_csv.name, metadata_parquet.name, 'manifest.json'],
 			test_mode=config.test_mode,
+			source_file=self.source_file,
 		)
 		manifest_path = work_dir / 'manifest.json'
 		manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')
