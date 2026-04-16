@@ -32,7 +32,7 @@ def _build_parser() -> argparse.ArgumentParser:
 	build_parser.add_argument('--pg-database', default=os.getenv('DEADTREES_DB_NAME'))
 	build_parser.add_argument('--pg-user', default=os.getenv('DEADTREES_DB_USER'))
 	build_parser.add_argument('--pg-password', default=os.getenv('DEADTREES_DB_PASSWORD'))
-	build_parser.add_argument('--pg-sslmode', default=os.getenv('DEADTREES_DB_SSLMODE', 'require'))
+	build_parser.add_argument('--pg-sslmode', default=os.getenv('DEADTREES_DB_SSLMODE', 'disable'))
 	build_parser.add_argument('--storage-root', required=True)
 	build_parser.add_argument('--output-root', required=True)
 	build_parser.add_argument('--working-dir', required=True)

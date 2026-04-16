@@ -13,7 +13,7 @@
 - Access method: direct PostgreSQL, not Supabase REST.
 - Output contract: build writes exactly one final ZIP to the root of `--output-root`.
 - GeoPackage layers are written incrementally per dataset using append mode; polygon GeoDataFrames are not accumulated across all datasets before export.
-- Current live-tested path works against existing `DEADTREES_DB_*` env vars when `DEADTREES_DB_SSLMODE=disable`.
+- Current live-tested path works against existing `DEADTREES_DB_*` env vars, and the codebase now defaults PostgreSQL `sslmode` to `disable` unless explicitly overridden.
 - Test mode works and limits to first 10 eligible dataset IDs.
 - For `standing-deadwood-aerial-global-conservative`, eligible datasets remain in AOI/metadata output even if they contribute zero deadwood polygons after clipping/cleanup.
 
@@ -50,7 +50,7 @@
   - `DEADTREES_DB_PASSWORD`
   - optional: `DEADTREES_DB_SSLMODE`
 - Current tested DB endpoint required:
-  - `DEADTREES_DB_SSLMODE=disable`
+  - default is `DEADTREES_DB_SSLMODE=disable`
 - Python env used successfully for live runs:
   - `/net/home/cmosig/miniconda3/envs/scienceagent/bin/python`
 

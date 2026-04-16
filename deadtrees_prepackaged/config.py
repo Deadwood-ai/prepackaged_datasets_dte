@@ -49,5 +49,5 @@ class BuildConfig:
 			'dbname': self.pg_database,
 			'user': self.pg_user,
 			'password': self.pg_password,
-			'sslmode': self.pg_sslmode or 'require',
+			'sslmode': self.pg_sslmode or 'disable',
 		}
