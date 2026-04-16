@@ -164,16 +164,24 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 					len(sampled_tiles),
 					dataset_id,
 				)
+				dataset_tiles_dir = tiles_dir / str(dataset_id)
+				dataset_tiles_dir.mkdir(parents=True, exist_ok=True)
 				for tile in sampled_tiles:
 					file_name = f'dataset_{dataset_id}_r{tile.row:05d}_c{tile.col:05d}.tif'
 					write_tile_geotiff(
 						tile_provider=tile_provider,
 						dataset_id=dataset_id,
 						tile=tile,
-						output_path=tiles_dir / file_name,
+						output_path=dataset_tiles_dir / file_name,
 						output_size_px=TILE_SIZE_PX,
 					)
-					tile_rows.append(build_tile_row(dataset_id=dataset_id, tile=tile, file_name=file_name))
+					tile_rows.append(
+						build_tile_row(
+							dataset_id=dataset_id,
+							tile=tile,
+							file_name=f'{dataset_id}/{file_name}',
+						)
+					)
 
 				used_dataset_ids.append(dataset_id)
 				metadata_rows.append(build_dataset_metadata_row(dataset_row))

@@ -386,14 +386,16 @@ def test_image_tiles_build_samples_at_most_20_tiles_per_dataset(monkeypatch, tmp
 		assert manifest['tile_count'] == 40
 		assert 'Package method: 1024x1024 orthophoto tiles sampled uniformly at random' in archive.read('LICENSE.txt').decode('utf-8')
 
-	tile_files = sorted((extract_dir / 'tiles').glob('*.tif'))
+	tile_files = sorted((extract_dir / 'tiles').glob('*/*.tif'))
 	assert len(tile_files) == 40
 	assert len([path for path in tile_files if path.name.startswith('dataset_1_')]) == 20
 	assert len([path for path in tile_files if path.name.startswith('dataset_2_')]) == 20
+	assert {path.parent.name for path in tile_files} == {'1', '2'}
 
 	tile_index = pd.read_csv(extract_dir / 'TILES.csv')
 	assert len(tile_index) == 40
 	assert sorted(tile_index['dataset_id'].value_counts().tolist()) == [20, 20]
+	assert tile_index['file_name'].str.startswith(('1/', '2/')).all()
 
 	with rasterio.open(tile_files[0]) as src:
 		assert src.width == 1024
