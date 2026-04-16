@@ -112,7 +112,6 @@ DEADTREES_DB_SSLMODE=disable \
   - Eligibility source: `v2_full_dataset_view`
   - Explicit filters:
     - shared baseline filters via `public_cc_by_dataset_filters` against `v2_full_dataset_view`
-    - `platform = 'airborne'`
     - orthophoto present
     - AOI present
   - Tile selection:

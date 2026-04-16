@@ -384,7 +384,7 @@ def test_image_tiles_build_samples_at_most_20_tiles_per_dataset(monkeypatch, tmp
 		assert manifest['used_dataset_ids'] == [1, 2]
 		assert manifest['dataset_count'] == 2
 		assert manifest['tile_count'] == 40
-		assert 'Package method: 1024x1024 aerial orthophoto tiles sampled uniformly at random' in archive.read('LICENSE.txt').decode('utf-8')
+		assert 'Package method: 1024x1024 orthophoto tiles sampled uniformly at random' in archive.read('LICENSE.txt').decode('utf-8')
 
 	tile_files = sorted((extract_dir / 'tiles').glob('*.tif'))
 	assert len(tile_files) == 40

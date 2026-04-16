@@ -59,7 +59,6 @@ IMAGE_TILES_1024_GLOBAL_AERIAL_SAMPLED_20_RANDOM_SQL = """
 	from v2_full_dataset_view fdv
 	left join doi_info di on di.dataset_id = fdv.id
 	where {common_dataset_filters}
-		and fdv.platform::text = 'airborne'
 		and fdv.ortho_file_name is not null
 		and exists (
 			select 1
@@ -154,11 +153,11 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 	name = 'image-tiles-1024-global-aerial-sampled-20-random'
 	source_file = 'deadtrees_prepackaged/datasets/image_tiles_1024_global_aerial_sampled_20_random.py'
 	user_description = (
-		'Random sample of 1024x1024 aerial orthophoto tiles from audited public datasets.'
+		'Random sample of 1024x1024 orthophoto tiles from audited public datasets.'
 	)
 	technical_description = (
 		'Up to 20 randomly sampled 1024x1024 orthophoto tiles per audited public CC-BY '
-		'aerial dataset, restricted to tiles fully covered by the AOI.'
+		'dataset, restricted to tiles fully covered by the AOI.'
 	)
 
 	def build(self, config: BuildConfig) -> BuildResult:

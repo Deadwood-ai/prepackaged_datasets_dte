@@ -184,7 +184,7 @@ TREE_COVER_REFERENCE = (
 )
 
 IMAGE_TILE_SAMPLING_REFERENCE = (
-	'Package method: 1024x1024 aerial orthophoto tiles sampled uniformly at random '
+	'Package method: 1024x1024 orthophoto tiles sampled uniformly at random '
 	'(maximum 20 tiles per dataset) from public CC BY audited deadtrees.earth datasets.'
 )
 
