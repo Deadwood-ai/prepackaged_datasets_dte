@@ -162,6 +162,7 @@ DEADTREES_DB_SSLMODE=disable \
   - `additional_information`
   - `citation_doi`
   - `freidata_doi`
+  - `phenology_probability_at_acquisition`
   - `bbox`
   - `biome_name`
   - `forest_cover_quality`

@@ -62,6 +62,7 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 		d.citation_doi,
 		o.bbox::text as bbox,
 		(m.metadata -> 'biome' ->> 'biome_name') as biome_name,
+		(m.metadata -> 'phenology' -> 'phenology_curve')::text as phenology_curve,
 		q.forest_cover_quality,
 		d.license::text as license,
 		d.platform::text as platform,

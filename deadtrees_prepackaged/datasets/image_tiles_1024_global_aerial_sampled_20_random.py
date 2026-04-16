@@ -49,12 +49,14 @@ IMAGE_TILES_1024_GLOBAL_AERIAL_SAMPLED_20_RANDOM_SQL = """
 		fdv.citation_doi,
 		fdv.bbox::text as bbox,
 		fdv.biome_name,
+		(m.metadata -> 'phenology' -> 'phenology_curve')::text as phenology_curve,
 		fdv.license::text as license,
 		fdv.platform::text as platform,
 		coalesce(di.freidata_doi, fdv.freidata_doi) as freidata_doi,
 		fdv.ortho_file_name
 	from v2_full_dataset_view fdv
 	left join doi_info di on di.dataset_id = fdv.id
+	left join v2_metadata m on m.dataset_id = fdv.id
 	where {common_dataset_filters}
 		and fdv.ortho_file_name is not null
 		and exists (
