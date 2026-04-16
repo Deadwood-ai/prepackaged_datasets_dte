@@ -6,19 +6,16 @@ import random
 import shutil
 import zipfile
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pandas as pd
-import rasterio
-from rasterio.windows import transform as window_transform
-from shapely.geometry import box
 
 from ..config import BuildConfig
-from ..helpers.labels import LabelRepository
 from ..helpers.license import IMAGE_TILE_SAMPLING_REFERENCE, build_license_text
 from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
-from ..helpers.orthophotos import OrthophotoTileProvider, Tile
+from ..helpers.labels import LabelRepository
+from ..helpers.orthophotos import OrthophotoTileProvider
+from ..helpers.tiles import build_tile_row, select_aoi_covered_tiles, write_tile_geotiff
 from ..postgres.client import connect_postgres
 from ..postgres.filters import public_cc_by_dataset_filters
 from ..postgres.queries import fetch_dataset_rows
@@ -83,72 +80,6 @@ def fetch_eligible_image_tile_datasets(connection, limit: int | None = None) -> 
 	)
 
 
-def _select_aoi_covered_tiles(
-	*,
-	dataset_id: int,
-	label_repository: LabelRepository,
-	tile_provider: OrthophotoTileProvider,
-) -> list[Tile]:
-	aoi = label_repository.get_aoi(dataset_id)
-	with tile_provider.open_dataset(dataset_id) as src:
-		aoi_in_source_crs = aoi.to_crs(src.crs) if src.crs is not None else aoi
-		aoi_geometry = aoi_in_source_crs.geometry.union_all()
-		return [
-			tile
-			for tile in tile_provider.iter_tiles(
-				dataset_id=dataset_id,
-				patch_size_px=TILE_SIZE_PX,
-				overlap_px=0,
-			)
-			if aoi_geometry.covers(box(*tile.bounds))
-		]
-
-
-def _write_tile_geotiff(
-	*,
-	tile_provider: OrthophotoTileProvider,
-	dataset_id: int,
-	tile: Tile,
-	output_path: Path,
-) -> None:
-	with tile_provider.open_dataset(dataset_id) as src:
-		data = tile_provider.read_tile(
-			dataset_id=dataset_id,
-			tile=tile,
-			out_size_px=TILE_SIZE_PX,
-		)
-		if data.ndim == 2:
-			data = data.reshape(1, data.shape[0], data.shape[1])
-
-		profile = {
-			'driver': 'GTiff',
-			'height': int(data.shape[1]),
-			'width': int(data.shape[2]),
-			'count': int(data.shape[0]),
-			'dtype': str(data.dtype),
-			'crs': src.crs,
-			'transform': window_transform(tile.window, src.transform),
-			'compress': 'lzw',
-		}
-		with rasterio.open(output_path, 'w', **profile) as dst:
-			dst.write(data)
-
-
-def _build_tile_row(*, dataset_id: int, tile: Tile, file_name: str) -> dict:
-	minx, miny, maxx, maxy = tile.bounds
-	return {
-		'tile_id': f'{dataset_id}_{tile.row}_{tile.col}',
-		'dataset_id': dataset_id,
-		'row': tile.row,
-		'col': tile.col,
-		'file_name': file_name,
-		'minx': minx,
-		'miny': miny,
-		'maxx': maxx,
-		'maxy': maxy,
-	}
-
-
 class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 	name = 'image-tiles-1024-global-aerial-sampled-20-random'
 	source_file = 'deadtrees_prepackaged/datasets/image_tiles_1024_global_aerial_sampled_20_random.py'
@@ -200,10 +131,11 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 			for dataset_row in dataset_rows:
 				dataset_id = int(dataset_row['id'])
 				logger.info("Processing dataset_id=%s for dataset=%s", dataset_id, self.name)
-				eligible_tiles = _select_aoi_covered_tiles(
+				eligible_tiles = select_aoi_covered_tiles(
 					dataset_id=dataset_id,
 					label_repository=labels,
 					tile_provider=tile_provider,
+					patch_size_px=TILE_SIZE_PX,
 				)
 				logger.info(
 					"Found %s AOI-covered candidate tiles for dataset_id=%s",
@@ -225,13 +157,14 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 				)
 				for tile in sampled_tiles:
 					file_name = f'dataset_{dataset_id}_r{tile.row:05d}_c{tile.col:05d}.tif'
-					_write_tile_geotiff(
+					write_tile_geotiff(
 						tile_provider=tile_provider,
 						dataset_id=dataset_id,
 						tile=tile,
 						output_path=tiles_dir / file_name,
+						output_size_px=TILE_SIZE_PX,
 					)
-					tile_rows.append(_build_tile_row(dataset_id=dataset_id, tile=tile, file_name=file_name))
+					tile_rows.append(build_tile_row(dataset_id=dataset_id, tile=tile, file_name=file_name))
 
 				used_dataset_ids.append(dataset_id)
 				metadata_rows.append(build_dataset_metadata_row(dataset_row))
