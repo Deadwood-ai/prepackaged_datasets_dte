@@ -16,7 +16,7 @@ from ..helpers.manifest import build_manifest
 from ..helpers.metadata import build_dataset_metadata_row
 from ..helpers.phenology import passes_phenology_threshold
 from ..postgres.client import connect_postgres
-from ..postgres.filters import public_cc_by_audited_candidate_filters
+from ..postgres.filters import public_cc_by_dataset_filters
 from ..postgres.queries import fetch_dataset_rows
 from ..result import BuildResult
 from .base import DatasetDefinition
@@ -77,8 +77,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 	left join doi_info di on di.dataset_id = d.id
 	order by d.id
 """.format(
-	common_dataset_filters=public_cc_by_audited_candidate_filters(
-		candidate_alias='p',
+	common_dataset_filters=public_cc_by_dataset_filters(
 		dataset_alias='d',
 		require_acquisition_date=True,
 	),

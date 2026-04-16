@@ -112,7 +112,7 @@ DEADTREES_DB_SSLMODE=disable \
   - Metadata joined from `v2_datasets`, `v2_orthos`, `v2_metadata`, `data_publication`.
   - `deadtrees_prepackaged/postgres/queries.py` only contains shared query execution helpers, not export-specific SQL filters.
   - Shared baseline dataset SQL filters live in `deadtrees_prepackaged/postgres/filters.py` and currently enforce `license = 'CC BY'`, `data_access = 'public'`, `archived = false`, and acquisition date presence.
-  - Shared audited export-candidate SQL filters in `deadtrees_prepackaged/postgres/filters.py` additionally enforce `v_export_polygon_candidates.final_assessment = 'no_issues'` so all exports only include audited datasets.
+  - Shared dataset SQL filters in `deadtrees_prepackaged/postgres/filters.py` additionally enforce `v2_datasets.final_assessment = 'no_issues'` by default so all exports only include audited datasets without depending on polygon-candidate audit state.
 
 ## Current Export Schema
 - Final deliverable: one ZIP in output root.
