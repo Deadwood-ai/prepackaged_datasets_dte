@@ -110,9 +110,19 @@ class StandingDeadwoodAerialGlobalConservativeDefinition(DatasetDefinition):
 		'Conservative export of standing deadwood cover polygons derived from orthophotos.'
 	)
 	technical_description = (
-		'Standing deadwood polygons clipped to the AOI of public CC-BY datasets '
-		'where deadwood quality is great or sentinel_ok and the phenology indicator '
-		'at acquisition time is > 128.'
+		'Dataset-level eligibility is defined from audited entries in '
+		'v2_full_dataset_view that are public, CC BY, not archived, and have a '
+		'complete acquisition date. Polygon eligibility is then restricted to '
+		'v_export_polygon_candidates rows with layer_type = deadwood and '
+		'deadwood_quality in {great, sentinel_ok}. A conservative phenology filter '
+		'is applied in Python using the exported phenology curve from v2_metadata, '
+		'requiring the acquisition-day indicator to be greater than 128. For each '
+		'eligible dataset, AOI geometry is always retained in the package, while '
+		'deadwood polygons are clipped to the AOI and reduced to polygonal '
+		'geometries only. Datasets that end up with zero deadwood polygons after '
+		'loading or clipping are still preserved in AOI and metadata outputs. The '
+		'final ZIP contains one GeoPackage, dataset-level metadata tables, a '
+		'package manifest, and attribution/license text.'
 	)
 
 	def build(self, config: BuildConfig) -> BuildResult:

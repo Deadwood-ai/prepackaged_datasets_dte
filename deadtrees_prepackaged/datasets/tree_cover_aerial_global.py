@@ -97,8 +97,17 @@ class TreeCoverAerialGlobalDefinition(DatasetDefinition):
 		'Export of all tree cover polygons derived from aerial orthophotos.'
 	)
 	technical_description = (
-		'All tree cover polygons clipped to the AOI of audited public CC-BY datasets '
-		'where forest cover quality is great or sentinel_ok.'
+		'Dataset-level eligibility is defined from audited entries in '
+		'v2_full_dataset_view that are public, CC BY, not archived, and have a '
+		'complete acquisition date. Polygon eligibility is then restricted to '
+		'v_export_polygon_candidates rows with layer_type = forest_cover and '
+		'forest_cover_quality in {great, sentinel_ok}. For each eligible dataset, '
+		'tree-cover polygons are loaded, clipped to the dataset AOI, reduced to '
+		'polygonal geometries only, and appended incrementally to a single '
+		'GeoPackage tree_cover layer. Datasets that yield no remaining polygons '
+		'after loading or AOI clipping are excluded from the final package. The '
+		'output ZIP contains the GeoPackage, dataset-level metadata tables, a '
+		'package manifest, and attribution/license text.'
 	)
 
 	def build(self, config: BuildConfig) -> BuildResult:

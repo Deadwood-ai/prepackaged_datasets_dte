@@ -87,8 +87,16 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 		'Random sample of 1024x1024 orthophoto tiles from audited public datasets.'
 	)
 	technical_description = (
-		'Up to 20 randomly sampled 1024x1024 orthophoto tiles per audited public CC-BY '
-		'dataset, restricted to tiles fully covered by the AOI.'
+		'Dataset eligibility is defined directly from audited entries in '
+		'v2_full_dataset_view that are public, CC BY, not archived, have a complete '
+		'acquisition date, include an orthophoto file, and have at least one AOI. '
+		'For each eligible orthophoto, the raster is partitioned into non-overlapping '
+		'1024x1024 source windows, and only tiles whose full bounds are covered by '
+		'the AOI are retained. A deterministic random sample seeded by dataset_id '
+		'selects at most 20 tiles per dataset from those AOI-covered candidates. '
+		'Selected tiles are written as GeoTIFF files under tiles/, accompanied by '
+		'dataset-level metadata tables, a per-tile index table, a package manifest, '
+		'and attribution/license text inside the final ZIP archive.'
 	)
 
 	def build(self, config: BuildConfig) -> BuildResult:
