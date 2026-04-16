@@ -20,7 +20,7 @@ def build_dataset_metadata_row(dataset_row: dict) -> dict:
 		'additional_information': dataset_row.get('additional_information'),
 		'citation_doi': dataset_row.get('citation_doi'),
 		'freidata_doi': dataset_row.get('freidata_doi'),
-		'phenology_probability_at_acquisition': _normalize_phenology_probability(phenology_value),
+		'phenology_probability_at_acquisition_0_100': _normalize_phenology_probability(phenology_value),
 		'bbox': dataset_row.get('bbox'),
 		'biome_name': dataset_row.get('biome_name'),
 		'forest_cover_quality': dataset_row.get('forest_cover_quality'),

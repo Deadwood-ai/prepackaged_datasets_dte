@@ -25,4 +25,4 @@ def test_metadata_row_omits_file_name():
 	assert 'file_name' not in row
 	assert row['dataset_id'] == 123
 	assert row['authors'] == 'A, B'
-	assert row['phenology_probability_at_acquisition'] == 2.75
+	assert row['phenology_probability_at_acquisition_0_100'] == 2.75
