@@ -29,7 +29,7 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 		select distinct
 			p.dataset_id
 		from v_export_polygon_candidates p
-		join v2_datasets d on d.id = p.dataset_id
+		join v2_full_dataset_view fdv on fdv.id = p.dataset_id
 		where p.layer_type = 'forest_cover'
 			and p.forest_cover_quality in ('great', 'sentinel_ok')
 			and {common_dataset_filters}
@@ -75,7 +75,7 @@ TREE_COVER_ELIGIBLE_DATASETS_SQL = """
 	order by d.id
 """.format(
 	common_dataset_filters=public_cc_by_dataset_filters(
-		dataset_alias='d',
+		dataset_alias='fdv',
 		require_acquisition_date=True,
 	),
 )

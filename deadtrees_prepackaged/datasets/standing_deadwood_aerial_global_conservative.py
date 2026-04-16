@@ -30,7 +30,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 		select distinct
 			p.dataset_id
 		from v_export_polygon_candidates p
-		join v2_datasets d on d.id = p.dataset_id
+		join v2_full_dataset_view fdv on fdv.id = p.dataset_id
 		join v2_metadata m on m.dataset_id = p.dataset_id
 		where p.layer_type = 'deadwood'
 			and p.deadwood_quality in ('great', 'sentinel_ok')
@@ -78,7 +78,7 @@ STANDING_DEADWOOD_AERIAL_GLOBAL_CONSERVATIVE_SQL = """
 	order by d.id
 """.format(
 	common_dataset_filters=public_cc_by_dataset_filters(
-		dataset_alias='d',
+		dataset_alias='fdv',
 		require_acquisition_date=True,
 	),
 )

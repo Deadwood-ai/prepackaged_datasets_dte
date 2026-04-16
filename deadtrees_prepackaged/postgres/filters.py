@@ -6,7 +6,6 @@ def public_cc_by_dataset_filters(
 	dataset_alias: str = 'd',
 	require_acquisition_date: bool = True,
 	require_audited_no_issues: bool = True,
-	audit_field: str = 'final_assessment',
 ) -> str:
 	filters = [
 		f"{dataset_alias}.license = 'CC BY'",
@@ -15,7 +14,7 @@ def public_cc_by_dataset_filters(
 	]
 
 	if require_audited_no_issues:
-		filters.append(f"{dataset_alias}.{audit_field} = 'no_issues'")
+		filters.append(f"coalesce({dataset_alias}.is_audited, false) = true")
 
 	if require_acquisition_date:
 		filters.extend(
