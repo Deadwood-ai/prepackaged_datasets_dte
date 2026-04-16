@@ -30,8 +30,9 @@ def build_manifest(
 	artifact_names: list[str],
 	test_mode: bool,
 	source_file: str,
+	feature_count_field: str = 'tree_cover_feature_count',
 ) -> dict:
-	return {
+	manifest = {
 		'dataset_name': dataset_name,
 		'package_name': package_name,
 		'version': version,
@@ -39,7 +40,8 @@ def build_manifest(
 		'built_at': datetime.now(UTC).isoformat(),
 		'used_dataset_ids': used_dataset_ids,
 		'dataset_count': dataset_count,
-		'tree_cover_feature_count': tree_cover_feature_count,
 		'artifacts': artifact_names,
 		'source_reference': build_source_reference(source_file),
 	}
+	manifest[feature_count_field] = tree_cover_feature_count
+	return manifest

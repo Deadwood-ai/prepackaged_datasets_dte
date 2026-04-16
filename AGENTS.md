@@ -5,6 +5,7 @@
 - Backend is expected to call package/CLI directly.
 - No HTTP/API endpoint in this repo.
 - Current implemented datasets:
+  - `image-tiles-1024-global-aerial-sampled-20-random`
   - `tree-cover-aerial-global`
   - `standing-deadwood-aerial-global-conservative`
 
@@ -106,6 +107,18 @@ DEADTREES_DB_SSLMODE=disable \
     - acquisition year/month/day all present
     - phenology indicator at acquisition day-of-year is `> 128`, applied locally in Python after candidate rows are fetched
   - Eligible datasets are retained in AOI and metadata outputs even when no deadwood polygons remain after AOI clipping/geometry cleanup.
+- `image-tiles-1024-global-aerial-sampled-20-random`
+  - Eligibility query lives in `deadtrees_prepackaged/datasets/image_tiles_1024_global_aerial_sampled_20_random.py`
+  - Eligibility source: `v2_full_dataset_view`
+  - Explicit filters:
+    - shared baseline filters via `public_cc_by_dataset_filters` against `v2_full_dataset_view`
+    - `platform = 'airborne'`
+    - orthophoto present
+    - AOI present
+  - Tile selection:
+    - generate non-overlapping `1024x1024` orthophoto tiles
+    - retain only tiles fully covered by the AOI
+    - sample at most 20 tiles per dataset using deterministic random sampling seeded by `dataset_id`
 - Shared behavior:
   - AOI fetched from `v2_aois`, assumed single relevant AOI.
   - Exported polygons are clipped to the AOI after loading.
@@ -124,6 +137,14 @@ DEADTREES_DB_SSLMODE=disable \
   - `manifest.json`
   - `LICENSE.txt` is always included for all packages and contains package attribution text, all unique authors in alphabetical order as a comma-separated list, all existing DOI values plus `deadtrees.earth` as sources, package-specific reference citations, and the full `CC BY 4.0` license text.
   - `manifest.json` includes a `source_reference` object with the dataset-definition file path and installed package version.
+- `image-tiles-1024-global-aerial-sampled-20-random` ZIP contents:
+  - `tiles/*.tif`
+  - `LICENSE.txt`
+  - `METADATA.csv`
+  - `METADATA.parquet`
+  - `TILES.csv`
+  - `TILES.parquet`
+  - `manifest.json`
 - Current `tree_cover` layer columns:
   - `dataset_id`
   - `geometry`

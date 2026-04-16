@@ -183,6 +183,11 @@ TREE_COVER_REFERENCE = (
 	'processing systems, 37, 49749-49767.'
 )
 
+IMAGE_TILE_SAMPLING_REFERENCE = (
+	'Package method: 1024x1024 aerial orthophoto tiles sampled uniformly at random '
+	'(maximum 20 tiles per dataset) from public CC BY audited deadtrees.earth datasets.'
+)
+
 
 def _collect_authors(dataset_rows: list[dict]) -> list[str]:
 	authors = {

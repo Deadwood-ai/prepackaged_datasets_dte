@@ -5,10 +5,18 @@ from pathlib import Path
 
 import geopandas as gpd
 import fiona
+import numpy as np
+import pandas as pd
+import rasterio
 import shapely
+from rasterio.transform import from_origin
+from rasterio.windows import Window
 from shapely.geometry import GeometryCollection, Polygon
 
 from deadtrees_prepackaged.config import BuildConfig
+from deadtrees_prepackaged.datasets.image_tiles_1024_global_aerial_sampled_20_random import (
+	ImageTiles1024GlobalAerialSampled20RandomDefinition,
+)
 from deadtrees_prepackaged.datasets.standing_deadwood_aerial_global_conservative import (
 	StandingDeadwoodAerialGlobalConservativeDefinition,
 )
@@ -239,7 +247,158 @@ def test_build_appends_multiple_datasets_to_single_layers(monkeypatch, tmp_path)
 
 
 def test_list_datasets_includes_deadwood_export():
-	assert list_datasets() == ['standing-deadwood-aerial-global-conservative', 'tree-cover-aerial-global']
+	assert list_datasets() == [
+		'image-tiles-1024-global-aerial-sampled-20-random',
+		'standing-deadwood-aerial-global-conservative',
+		'tree-cover-aerial-global',
+	]
+
+
+class FakeRasterDataset:
+	def __init__(self):
+		self.crs = 'EPSG:4326'
+		self.transform = from_origin(0, 4096, 1, 1)
+		self.count = 3
+
+	def __enter__(self):
+		return self
+
+	def __exit__(self, exc_type, exc, tb):
+		return False
+
+
+class FakeOrthophotoTileProvider:
+	def __init__(self, _connection, _storage_root):
+		pass
+
+	def open_dataset(self, dataset_id: int):
+		return FakeRasterDataset()
+
+	def iter_tiles(
+		self,
+		dataset_id: int,
+		patch_size_px: int,
+		resolution_cm: float | None = None,
+		overlap_px: int = 0,
+	):
+		del resolution_cm, overlap_px
+		for index in range(25):
+			row = index // 5
+			col = index % 5
+			yield self._make_tile(dataset_id, row=row, col=col, patch_size_px=patch_size_px)
+
+	def read_tile(self, dataset_id: int, tile, out_size_px: int | None = None):
+		size = out_size_px or 1024
+		return np.full((3, size, size), fill_value=dataset_id % 255, dtype='uint8')
+
+	@staticmethod
+	def _make_tile(dataset_id: int, row: int, col: int, patch_size_px: int):
+		col_off = col * patch_size_px
+		row_off = row * patch_size_px
+		return type('TileLike', (), {
+			'dataset_id': dataset_id,
+			'window': Window(col_off=col_off, row_off=row_off, width=patch_size_px, height=patch_size_px),
+			'row': row,
+			'col': col,
+			'bounds': (
+				float(col_off),
+				float(4096 - row_off - patch_size_px),
+				float(col_off + patch_size_px),
+				float(4096 - row_off),
+			),
+		})()
+
+
+def test_image_tiles_build_samples_at_most_20_tiles_per_dataset(monkeypatch, tmp_path):
+	class LargeAoiLabelRepository(FakeLabelRepository):
+		def get_aoi(self, dataset_id: int) -> gpd.GeoDataFrame:
+			return gpd.GeoDataFrame(
+				[
+					{
+						'dataset_id': dataset_id,
+						'geometry': Polygon([(0, 0), (0, 5120), (5120, 5120), (5120, 0)]),
+					}
+				],
+				geometry='geometry',
+				crs='EPSG:4326',
+			)
+
+	dataset_rows = [
+		{
+			'id': 1,
+			'authors': ['Author One'],
+			'aquisition_year': 2024,
+			'aquisition_month': 1,
+			'aquisition_day': 2,
+			'additional_information': None,
+			'citation_doi': '10.1000/zeta',
+			'freidata_doi': '10.1000/alpha',
+			'bbox': 'BOX(0 0,1 1)',
+			'biome_name': 'Biome',
+			'license': 'CC BY',
+			'platform': 'aerial',
+			'ortho_file_name': 'dataset_1.tif',
+		},
+		{
+			'id': 2,
+			'authors': ['Author Two'],
+			'aquisition_year': 2024,
+			'aquisition_month': 1,
+			'aquisition_day': 3,
+			'additional_information': None,
+			'citation_doi': None,
+			'freidata_doi': None,
+			'bbox': 'BOX(0 0,1 1)',
+			'biome_name': 'Biome',
+			'license': 'CC BY',
+			'platform': 'aerial',
+			'ortho_file_name': 'dataset_2.tif',
+		},
+	]
+
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.image_tiles_1024_global_aerial_sampled_20_random.connect_postgres',
+		fake_connect_postgres,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.image_tiles_1024_global_aerial_sampled_20_random.fetch_eligible_image_tile_datasets',
+		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.image_tiles_1024_global_aerial_sampled_20_random.LabelRepository',
+		LargeAoiLabelRepository,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.image_tiles_1024_global_aerial_sampled_20_random.OrthophotoTileProvider',
+		FakeOrthophotoTileProvider,
+	)
+
+	result = ImageTiles1024GlobalAerialSampled20RandomDefinition().build(make_config(tmp_path))
+	zip_path = result.artifact_paths['zip']
+	extract_dir = tmp_path / 'tiles_unzipped'
+	extract_dir.mkdir()
+
+	with zipfile.ZipFile(zip_path) as archive:
+		archive.extractall(extract_dir)
+		manifest = json.loads(archive.read('manifest.json').decode('utf-8'))
+		assert manifest['used_dataset_ids'] == [1, 2]
+		assert manifest['dataset_count'] == 2
+		assert manifest['tile_count'] == 40
+		assert 'Package method: 1024x1024 aerial orthophoto tiles sampled uniformly at random' in archive.read('LICENSE.txt').decode('utf-8')
+
+	tile_files = sorted((extract_dir / 'tiles').glob('*.tif'))
+	assert len(tile_files) == 40
+	assert len([path for path in tile_files if path.name.startswith('dataset_1_')]) == 20
+	assert len([path for path in tile_files if path.name.startswith('dataset_2_')]) == 20
+
+	tile_index = pd.read_csv(extract_dir / 'TILES.csv')
+	assert len(tile_index) == 40
+	assert sorted(tile_index['dataset_id'].value_counts().tolist()) == [20, 20]
+
+	with rasterio.open(tile_files[0]) as src:
+		assert src.width == 1024
+		assert src.height == 1024
+		assert src.count == 3
 
 
 def test_keep_polygonal_geometries_drops_non_area_parts():
