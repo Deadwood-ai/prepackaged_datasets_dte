@@ -41,11 +41,19 @@ def write_tile_geotiff(
 	output_size_px: int,
 ) -> None:
 	with tile_provider.open_dataset(dataset_id) as src:
-		data = tile_provider.read_tile(
-			dataset_id=dataset_id,
-			tile=tile,
-			out_size_px=output_size_px,
-		)
+		band_indexes = tuple(range(1, min(3, src.count) + 1))
+		if not band_indexes:
+			raise ValueError(f'No raster bands available for dataset {dataset_id}')
+
+		if output_size_px is None:
+			data = src.read(indexes=band_indexes, window=tile.window)
+		else:
+			data = src.read(
+				indexes=band_indexes,
+				window=tile.window,
+				out_shape=(len(band_indexes), output_size_px, output_size_px),
+				resampling=rasterio.enums.Resampling.bilinear,
+			)
 		if data.ndim == 2:
 			data = data.reshape(1, data.shape[0], data.shape[1])
 

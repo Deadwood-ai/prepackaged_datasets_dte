@@ -258,13 +258,30 @@ class FakeRasterDataset:
 	def __init__(self):
 		self.crs = 'EPSG:4326'
 		self.transform = from_origin(0, 4096, 1, 1)
-		self.count = 3
+		self.count = 4
 
 	def __enter__(self):
 		return self
 
 	def __exit__(self, exc_type, exc, tb):
 		return False
+
+	def read(self, indexes=None, window=None, out_shape=None, resampling=None):
+		del window, resampling
+		if indexes is None:
+			band_count = self.count
+		elif isinstance(indexes, int):
+			band_count = 1
+		else:
+			band_count = len(indexes)
+
+		if out_shape is not None:
+			_, height, width = out_shape
+		else:
+			height = 1024
+			width = 1024
+
+		return np.full((band_count, height, width), fill_value=7, dtype='uint8')
 
 
 class FakeOrthophotoTileProvider:

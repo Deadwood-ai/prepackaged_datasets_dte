@@ -95,7 +95,8 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 		'the AOI are retained. A deterministic random sample seeded by dataset_id '
 		'selects at most 20 tiles per dataset from those AOI-covered candidates. '
 		'Selected tiles are written as GeoTIFF files under tiles/ in the original '
-		'orthophoto CRS and native source resolution, accompanied by dataset-level '
+		'orthophoto CRS and native source resolution, and only the first three source '
+		'bands (RGB) are read and saved. The package also includes dataset-level '
 		'metadata tables, a per-tile index table, a package manifest, and '
 		'attribution/license text inside the final ZIP archive.'
 	)
