@@ -94,9 +94,10 @@ class ImageTiles1024GlobalAerialSampled20RandomDefinition(DatasetDefinition):
 		'1024x1024 source windows, and only tiles whose full bounds are covered by '
 		'the AOI are retained. A deterministic random sample seeded by dataset_id '
 		'selects at most 20 tiles per dataset from those AOI-covered candidates. '
-		'Selected tiles are written as GeoTIFF files under tiles/, accompanied by '
-		'dataset-level metadata tables, a per-tile index table, a package manifest, '
-		'and attribution/license text inside the final ZIP archive.'
+		'Selected tiles are written as GeoTIFF files under tiles/ in the original '
+		'orthophoto CRS and native source resolution, accompanied by dataset-level '
+		'metadata tables, a per-tile index table, a package manifest, and '
+		'attribution/license text inside the final ZIP archive.'
 	)
 
 	def build(self, config: BuildConfig) -> BuildResult:
