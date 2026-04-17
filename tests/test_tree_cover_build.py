@@ -135,6 +135,71 @@ def test_build_creates_single_zip_and_cleans_intermediate_files(monkeypatch, tmp
 		assert 'package_version' in manifest['source_reference']
 
 
+def test_build_stages_artifacts_in_workdir_before_creating_output_zip(monkeypatch, tmp_path):
+	dataset_rows = [
+		{
+			'id': 1,
+			'authors': ['Author'],
+			'aquisition_year': 2024,
+			'aquisition_month': 1,
+			'aquisition_day': 2,
+			'additional_information': None,
+			'citation_doi': None,
+			'freidata_doi': None,
+			'bbox': 'BOX(0 0,1 1)',
+			'biome_name': 'Biome',
+			'forest_cover_quality': 'great',
+			'license': 'CC BY',
+			'platform': 'aerial',
+		}
+	]
+
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.connect_postgres',
+		fake_connect_postgres,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.fetch_eligible_tree_cover_datasets',
+		lambda _conn, limit=None: dataset_rows[:limit] if limit else dataset_rows,
+	)
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.LabelRepository',
+		FakeLabelRepository,
+	)
+
+	observed = {}
+
+	class InspectingZipFile(zipfile.ZipFile):
+		def __init__(self, file, *args, **kwargs):
+			observed['zip_path'] = Path(file)
+			observed['output_entries_before_zip'] = sorted(
+				path.name for path in (tmp_path / 'out').iterdir()
+			)
+			work_dir = tmp_path / 'work' / 'tree-cover-aerial-global_2026.04.09_test'
+			observed['work_dir_exists_before_zip'] = work_dir.exists()
+			observed['work_entries_before_zip'] = sorted(path.name for path in work_dir.iterdir())
+			super().__init__(file, *args, **kwargs)
+
+	monkeypatch.setattr(
+		'deadtrees_prepackaged.datasets.tree_cover_aerial_global.zipfile.ZipFile',
+		InspectingZipFile,
+	)
+
+	result = TreeCoverAerialGlobalDefinition().build(make_config(tmp_path))
+
+	assert observed['zip_path'] == tmp_path / 'out' / 'tree-cover-aerial-global_2026.04.09_test.zip'
+	assert observed['output_entries_before_zip'] == []
+	assert observed['work_dir_exists_before_zip'] is True
+	assert observed['work_entries_before_zip'] == [
+		'LICENSE.txt',
+		'METADATA.csv',
+		'METADATA.parquet',
+		'manifest.json',
+		'tree-cover-aerial-global_2026.04.09_test.gpkg',
+	]
+	assert list(result.output_dir.iterdir()) == [result.artifact_paths['zip']]
+
+
 def test_build_geopackage_layers_have_expected_columns(monkeypatch, tmp_path):
 	dataset_rows = [
 		{
