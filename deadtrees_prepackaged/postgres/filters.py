@@ -14,7 +14,19 @@ def public_cc_by_dataset_filters(
 	]
 
 	if require_audited_no_issues:
-		filters.append(f"coalesce({dataset_alias}.is_audited, false) = true")
+		filters.extend(
+			[
+				f"coalesce({dataset_alias}.is_audited, false) = true",
+				(
+					"exists ("
+					"select 1 "
+					"from dataset_audit da "
+					f"where da.dataset_id = {dataset_alias}.id "
+					"and da.final_assessment = 'no_issues'"
+					")"
+				),
+			]
+		)
 
 	if require_acquisition_date:
 		filters.extend(
